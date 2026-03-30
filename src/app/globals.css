@@ -1,0 +1,211 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-primary: #0a0a0f;
+  --color-bg-secondary: #111118;
+  --color-bg-tertiary: #1a1a24;
+  --color-bg-card: #14141e;
+  --color-bg-card-hover: #1c1c2a;
+  --color-bg-glass: rgba(20, 20, 30, 0.7);
+
+  --color-border-primary: rgba(255, 255, 255, 0.06);
+  --color-border-secondary: rgba(255, 255, 255, 0.1);
+  --color-border-accent: rgba(99, 102, 241, 0.3);
+
+  --color-text-primary: #e8e8ef;
+  --color-text-secondary: #9494a8;
+  --color-text-tertiary: #5a5a72;
+  --color-text-accent: #818cf8;
+
+  --color-accent-indigo: #6366f1;
+  --color-accent-violet: #8b5cf6;
+  --color-accent-cyan: #22d3ee;
+  --color-accent-emerald: #34d399;
+  --color-accent-amber: #fbbf24;
+  --color-accent-rose: #fb7185;
+  --color-accent-sky: #38bdf8;
+
+  --color-bias-left: #3b82f6;
+  --color-bias-center-left: #60a5fa;
+  --color-bias-center: #a78bfa;
+  --color-bias-center-right: #f97316;
+  --color-bias-right: #ef4444;
+
+  --color-credibility-high: #34d399;
+  --color-credibility-medium: #fbbf24;
+  --color-credibility-low: #fb7185;
+
+  --font-family-sans: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'SF Mono', monospace;
+  --font-family-serif: 'Newsreader', 'Georgia', serif;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-family-sans);
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: rgba(99, 102, 241, 0.3);
+    color: #fff;
+  }
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* === Shimmer Loading Animation === */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-tertiary) 25%,
+    rgba(99, 102, 241, 0.08) 50%,
+    var(--color-bg-tertiary) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite ease-in-out;
+  border-radius: 8px;
+}
+
+/* === Fade in animation === */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* === Staggered children === */
+.stagger-children > * {
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+
+/* === Pulse dot === */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.pulse-dot {
+  animation: pulse-dot 1.5s infinite ease-in-out;
+}
+
+/* === Glass card === */
+.glass-card {
+  background: var(--color-bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-border-primary);
+  border-radius: 12px;
+}
+
+.glass-card-hover:hover {
+  border-color: var(--color-border-secondary);
+  background: var(--color-bg-card-hover);
+}
+
+/* === Gradient text === */
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-accent-indigo), var(--color-accent-violet), var(--color-accent-cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* === Gradient border === */
+.gradient-border {
+  position: relative;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(139, 92, 246, 0.2), rgba(34, 211, 238, 0.1));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* === Bias tag colors === */
+.bias-left { color: var(--color-bias-left); background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.2); }
+.bias-center-left { color: var(--color-bias-center-left); background: rgba(96, 165, 250, 0.12); border: 1px solid rgba(96, 165, 250, 0.2); }
+.bias-center { color: var(--color-bias-center); background: rgba(167, 139, 250, 0.12); border: 1px solid rgba(167, 139, 250, 0.2); }
+.bias-center-right { color: var(--color-bias-center-right); background: rgba(249, 115, 22, 0.12); border: 1px solid rgba(249, 115, 22, 0.2); }
+.bias-right { color: var(--color-bias-right); background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.2); }
+
+/* === Credibility indicator === */
+.credibility-high { color: var(--color-credibility-high); }
+.credibility-medium { color: var(--color-credibility-medium); }
+.credibility-low { color: var(--color-credibility-low); }
+
+/* === Agent status indicator === */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.agent-spinner {
+  animation: spin-slow 1.2s linear infinite;
+}
+
+/* === Quote highlight === */
+.quote-highlight {
+  border-left: 3px solid var(--color-accent-indigo);
+  padding-left: 12px;
+  margin-left: 0;
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
