@@ -1,43 +1,37 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg-primary: #0a0a0f;
-  --color-bg-secondary: #111118;
-  --color-bg-tertiary: #1a1a24;
-  --color-bg-card: #14141e;
-  --color-bg-card-hover: #1c1c2a;
-  --color-bg-glass: rgba(20, 20, 30, 0.7);
+  --color-bg-page: #F7F5F0;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-sidebar: #F4F2ED;
+  --color-bg-nav: #00153c;
+  --color-bg-dark: #121212;
 
-  --color-border-primary: rgba(255, 255, 255, 0.06);
-  --color-border-secondary: rgba(255, 255, 255, 0.1);
-  --color-border-accent: rgba(99, 102, 241, 0.3);
+  --color-text-primary: #121212;
+  --color-text-secondary: #3D3D3D;
+  --color-text-muted: #6B6B6B;
 
-  --color-text-primary: #e8e8ef;
-  --color-text-secondary: #9494a8;
-  --color-text-tertiary: #5a5a72;
-  --color-text-accent: #818cf8;
+  --color-accent-brand: #052962;
+  --color-accent-red: #990000;
+  --color-accent-kicker: #A11D21;
+  --color-accent-green: #2E7D32;
 
-  --color-accent-indigo: #6366f1;
-  --color-accent-violet: #8b5cf6;
-  --color-accent-cyan: #22d3ee;
-  --color-accent-emerald: #34d399;
-  --color-accent-amber: #fbbf24;
-  --color-accent-rose: #fb7185;
-  --color-accent-sky: #38bdf8;
+  --color-rule-line: #DCDCDC;
+  --color-rule-heavy: #121212;
 
-  --color-bias-left: #3b82f6;
+  --color-bias-left: #3B82F6;
   --color-bias-center-left: #60a5fa;
-  --color-bias-center: #a78bfa;
-  --color-bias-center-right: #f97316;
-  --color-bias-right: #ef4444;
+  --color-bias-center: #A78BFA;
+  --color-bias-center-right: #F97316;
+  --color-bias-right: #EF4444;
 
-  --color-credibility-high: #34d399;
-  --color-credibility-medium: #fbbf24;
-  --color-credibility-low: #fb7185;
+  --color-credibility-high: #2E7D32;
+  --color-credibility-medium: #F57F17;
+  --color-credibility-low: #C62828;
 
-  --font-family-sans: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-family-mono: 'JetBrains Mono', 'SF Mono', monospace;
-  --font-family-serif: 'Newsreader', 'Georgia', serif;
+  --font-display: 'DM Serif Display', serif;
+  --font-body: 'Newsreader', serif;
+  --font-ui: 'DM Sans', sans-serif;
 }
 
 @layer base {
@@ -52,16 +46,22 @@
   }
 
   body {
-    font-family: var(--font-family-sans);
-    background: var(--color-bg-primary);
+    font-family: var(--font-body);
+    background: var(--color-bg-page);
     color: var(--color-text-primary);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    line-height: 1.2;
+    color: var(--color-text-primary);
+  }
+
   ::selection {
-    background: rgba(99, 102, 241, 0.3);
+    background: var(--color-accent-brand);
     color: #fff;
   }
 }
@@ -75,11 +75,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-rule-line);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--color-text-muted);
 }
 
 /* === Shimmer Loading Animation === */
@@ -112,6 +112,17 @@
   }
 }
 
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 30s linear infinite;
+}
+
 .animate-fade-in-up {
   animation: fadeInUp 0.5s ease-out forwards;
 }
@@ -140,26 +151,20 @@
   animation: pulse-dot 1.5s infinite ease-in-out;
 }
 
-/* === Glass card === */
+/* === Glass card removed for solid components === */
 .glass-card {
-  background: var(--color-bg-glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--color-border-primary);
-  border-radius: 12px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-rule-line);
+  border-radius: 4px;
 }
 
 .glass-card-hover:hover {
-  border-color: var(--color-border-secondary);
-  background: var(--color-bg-card-hover);
+  border-color: var(--color-text-muted);
 }
 
 /* === Gradient text === */
 .gradient-text {
-  background: linear-gradient(135deg, var(--color-accent-indigo), var(--color-accent-violet), var(--color-accent-cyan));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--color-accent-brand);
 }
 
 /* === Gradient border === */

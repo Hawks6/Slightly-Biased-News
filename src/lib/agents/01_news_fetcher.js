@@ -119,11 +119,11 @@ async function fetchFromRSS(query) {
 
     if (items.length === 0) return null;
 
-    console.log(`[NewsFetcher] RSS Scraper found ${items.length} links, extracting full text for top 6 articles...`);
+    console.log(`[NewsFetcher] RSS Scraper found ${items.length} links, extracting full text for top 12 articles...`);
 
-    // Extract full text for top 6 items in parallel
+    // Extract full text for top 12 items in parallel (increased from 6 to provide better clustering pool in fallback)
     const articles = await Promise.all(
-      items.slice(0, 6).map(async (item) => {
+      items.slice(0, 12).map(async (item) => {
         try {
           // Use article-extractor to get clean text/metadata
           const extracted = await extract(item.link);
@@ -178,7 +178,7 @@ export async function fetchNews(query) {
   if (newsApiKey) {
     try {
       const res = await fetch(
-        `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&sortBy=publishedAt&pageSize=10&language=en&apiKey=${newsApiKey}`,
+        `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&sortBy=publishedAt&pageSize=60&language=en&apiKey=${newsApiKey}`,
         { next: { revalidate: 300 } }
       );
       if (res.ok) {

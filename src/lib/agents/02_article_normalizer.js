@@ -48,7 +48,7 @@ export function normalizeArticles(rawArticles) {
         "Unknown Source";
 
       return {
-        id: `article-${index}-${Date.now()}`,
+        id: article.id || `article-${index}-${Date.now()}`,
         title: truncate(article.title, 200),
         description: truncate(article.description || article.content || "", 180),
         content: article.content || article.description || "",

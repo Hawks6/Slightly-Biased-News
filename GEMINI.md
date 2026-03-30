@@ -1,9 +1,9 @@
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
-**NewsLens**
+**Slightly Biased News**
 
-NewsLens is an event-first news bias analysis platform. Instead of showing individual articles, it clusters related coverage into "news events" and lets users see how each event is framed across the political spectrum. The three-level architecture — Categories → Events → Analysis — gives users a broadsheet-style experience with AI-powered editorial intelligence underneath.
+*Slightly* Biased News is an event-first news bias analysis platform. Instead of showing individual articles, it clusters related coverage into "news events" and lets users see how each event is framed across the political spectrum. The three-level architecture — Categories → Events → Analysis — gives users a broadsheet-style experience with AI-powered editorial intelligence underneath.
 
 **Core Value:** When a user clicks a news event, they see the full bias analysis across all sources covering that story — how left, center, and right media frame the same facts differently.
 
@@ -118,7 +118,7 @@ NewsLens is an event-first news bias analysis platform. Instead of showing indiv
 ```
 ## Layers
 ### 1. Presentation Layer
-- **Single component:** `src/components/NewsLensApp.jsx` (~1100 lines)
+- **Single component:** `src/components/SlightlyBiasedApp.jsx` (~1100 lines)
 - Contains all sub-components inline (not extracted to separate files)
 - Two-view state machine: `activeView: "selector" | "feed"`
 - Uses Recharts for data visualization (BarChart, PieChart)
@@ -136,7 +136,7 @@ NewsLens is an event-first news bias analysis platform. Instead of showing indiv
 ```
 ```
 ## Entry Points
-- **Web:** `src/app/page.js` → renders `<NewsLensApp />`
+- **Web:** `src/app/page.js` → renders `<SlightlyBiasedApp />`
 - **API:** `src/app/api/analyze/route.js` (main pipeline)
 - **API:** `src/app/api/news/route.js` (lightweight news fetch)
 - **Dev server:** `npm run dev` (Next.js dev server)
