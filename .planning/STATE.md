@@ -11,9 +11,9 @@ See: `.planning/PROJECT.md` (updated 2026-03-30)
 
 | Phase | Name | Status |
 |---|---|---|
-| Phase 1 | Event API & Clustering Logic | Not Started |
-| Phase 2 | App Data Flow Refactoring | Not Started |
-| Phase 3 | Event-First UI Migration | Not Started |
+| Phase 1 | Event API & Clustering Logic | Completed |
+| Phase 2 | App Data Flow Refactoring | Completed |
+| Phase 3 | Event-First UI Migration | Planned |
 
 **Current Blockers:**
 None.
