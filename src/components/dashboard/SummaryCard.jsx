@@ -1,4 +1,4 @@
-import { Sparkles, ChevronRight, Eye } from "lucide-react";
+import { Sparkles, ChevronRight, Eye, FileText } from "lucide-react";
 
 export default function SummaryCard({ summary, realityScore }) {
   if (!summary || !realityScore) return null;
@@ -55,16 +55,33 @@ export default function SummaryCard({ summary, realityScore }) {
         </div>
       </div>
 
-      <p
-        className="text-sm leading-relaxed mb-4"
-        style={{ color: "var(--color-text-secondary)", fontFamily: "var(--font-family-serif)" }}
-      >
-        {summary.summary}
-      </p>
+      <div className="mb-6">
+        <p
+          className="text-sm leading-relaxed"
+          style={{ color: "var(--color-text-secondary)", fontFamily: "var(--font-family-serif)" }}
+        >
+          {summary.summary}
+        </p>
+      </div>
+
+      {summary.narrative && (
+        <div className="mb-6 p-4 border-l-4" style={{ background: "rgba(5, 41, 98, 0.05)", borderColor: "var(--color-accent-brand)" }}>
+          <div className="flex items-center gap-2 mb-2">
+            <FileText size={14} style={{ color: "var(--color-accent-brand)" }} />
+            <h3 className="text-xs font-semibold uppercase tracking-wider"
+              style={{ color: "var(--color-accent-kicker)" }}>
+              Narrative Analysis
+            </h3>
+          </div>
+          <p className="text-sm leading-relaxed" style={{ color: "var(--color-text-secondary)", fontFamily: "var(--font-body)" }}>
+            {summary.narrative}
+          </p>
+        </div>
+      )}
 
       {summary.takeaways && summary.takeaways.length > 0 && (
         <div className="mb-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider mb-2"
+          <h3 className="text-xs font-semibold uppercase tracking-wider mb-3"
             style={{ color: "var(--color-text-tertiary)" }}>
             Key Takeaways
           </h3>

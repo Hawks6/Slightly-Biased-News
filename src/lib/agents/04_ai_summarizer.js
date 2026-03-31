@@ -1,21 +1,40 @@
+import Groq from "groq-sdk";
+
 /**
  * Agent 04: AI Summarizer
- * Calls the Anthropic Claude API to build a neutral, multi-perspective summary.
- * Falls back to an extractive summarizer if no API key is available.
+ * Uses the same Groq SDK instance as the event clusterer.
  */
 
-async function callAnthropicSummarizer(articles, query) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return null;
+const groq = new Groq({ 
+  apiKey: process.env.GROQ_API_KEY || "dummy_key_avoid_init_error" 
+});
+
+async function callGroqSummarizer(articles, query) {
+  if (!process.env.GROQ_API_KEY) return null;
 
   const articlesText = articles
     .map((a, i) => `[${i + 1}] ${a.source.name} (${a.bias}): ${a.title}\n${a.content}`)
     .join("\n\n---\n\n");
 
-  const prompt = `You are a neutral editorial analyst. Given the following news articles about "${query}", write:
-1. A single-paragraph NEUTRAL summary (max 150 words) that synthesizes all perspectives without favoring any.
-2. Three KEY TAKEAWAYS as bullet points.
-3. A one-sentence WHAT TO WATCH statement about future developments.
+  const prompt = `You are a neutral editorial analyst for a media bias news platform. Given the following news articles about "${query}", provide a comprehensive analysis:
+
+1. An EXTENDED NEUTRAL SUMMARY (300-400 words) that:
+   - Synthesizes all perspectives without favoring any political viewpoint
+   - Identifies the core facts all sources agree on
+   - Notes key areas of disagreement or different emphasis
+   - Provides necessary context readers should know
+
+2. Five KEY TAKEAWAYS as bullet points that:
+   - Distill the most important developments
+   - Represent the spectrum of coverage
+   - Help readers understand what's at stake
+
+3. A NARRATIVE that explains:
+   - How different outlets are framing the story
+   - What angles are being emphasized or downplayed
+   - The broader implications or significance
+
+4. A WHAT TO WATCH statement about future developments.
 
 Articles:
 ${articlesText}
@@ -23,37 +42,25 @@ ${articlesText}
 Respond in JSON format:
 {
   "summary": "...",
-  "takeaways": ["...", "...", "..."],
+  "narrative": "...",
+  "takeaways": ["...", "...", "...", "...", "..."],
   "watchStatement": "..."
 }`;
 
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 600,
-        messages: [{ role: "user", content: prompt }],
-      }),
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+      response_format: { type: "json_object" },
+      max_tokens: 1500,
     });
 
-    if (res.ok) {
-      const data = await res.json();
-      const text = data.content?.[0]?.text;
-      if (text) {
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          return JSON.parse(jsonMatch[0]);
-        }
-      }
+    const text = chatCompletion.choices?.[0]?.message?.content;
+    if (text) {
+      return JSON.parse(text);
     }
   } catch (e) {
-    console.warn("[Summarizer] Anthropic API call failed:", e.message);
+    console.warn("[Summarizer] Groq API call failed:", e.message);
   }
 
   return null;
@@ -77,7 +84,6 @@ function cleanText(html) {
 }
 
 function extractiveSummary(articles, query) {
-  // Build a summary from the most diverse set of descriptions
   const biasGroups = {};
   articles.forEach((a) => {
     const group = a.bias || "center";
@@ -92,7 +98,6 @@ function extractiveSummary(articles, query) {
     const cleanContent = cleanText(textToProcess);
     
     if (cleanContent) {
-      // Split by periods not followed by another period (to avoid ellipses)
       const sentences = cleanContent.split(/\.(?!\.)\s+/).filter((s) => s.length > 40 && !s.includes("http"));
       if (sentences.length > 0) {
         selectedSentences.push(sentences[0].trim() + ".");
@@ -105,7 +110,23 @@ function extractiveSummary(articles, query) {
       ? selectedSentences.join(" ")
       : `Multiple sources are reporting on ${query} with varying perspectives and emphasis.`;
 
-  const takeaways = articles.slice(0, 3).map((a) => {
+  const leftSources = articles.filter(a => a.bias < -10).slice(0, 2);
+  const centerSources = articles.filter(a => a.bias >= -10 && a.bias <= 10).slice(0, 2);
+  const rightSources = articles.filter(a => a.bias > 10).slice(0, 2);
+  
+  const narrative = [];
+  if (leftSources.length > 0) {
+    narrative.push(`Left-leaning outlets like ${leftSources.map(s => s.source.name).join(", ")} tend to emphasize ` +
+      (leftSources[0].content || "").substring(0, 80) + "... ");
+  }
+  if (centerSources.length > 0) {
+    narrative.push(`Center sources such as ${centerSources.map(s => s.source.name).join(", ")} provide more balanced coverage.`);
+  }
+  if (rightSources.length > 0) {
+    narrative.push(`Right-leaning outlets including ${rightSources.map(s => s.source.name).join(", ")} focus on different aspects.`);
+  }
+
+  const takeaways = articles.slice(0, 5).map((a) => {
     const textToProcess = a.content || a.description || "";
     const cleanContent = cleanText(textToProcess);
     const sentences = cleanContent.split(/\.(?!\.)\s+/).filter(s => s.length > 30 && !s.includes("http"));
@@ -114,10 +135,13 @@ function extractiveSummary(articles, query) {
   });
 
   return {
-    summary: summary.slice(0, 500),
+    summary: summary.slice(0, 600),
+    narrative: narrative.join(" ") || "Coverage varies across the political spectrum, with different outlets emphasizing different aspects of the story.",
     takeaways: takeaways.length > 0 ? takeaways : [
       "Multiple perspectives exist on this topic.",
       "Coverage varies significantly across political leanings.",
+      "Different sources emphasize different aspects.",
+      "Context and framing influence how stories are told.",
       "Consider consulting primary sources for the most accurate picture.",
     ],
     watchStatement: `Continued developments on "${query}" may shift the current narrative as new information emerges.`,
@@ -125,12 +149,10 @@ function extractiveSummary(articles, query) {
 }
 
 export async function summarizeArticles(articles, query) {
-  // Try Anthropic first
-  const aiSummary = await callAnthropicSummarizer(articles, query);
+  const aiSummary = await callGroqSummarizer(articles, query);
   if (aiSummary) {
     return { ...aiSummary, method: "ai" };
   }
 
-  // Extractive fallback
   return { ...extractiveSummary(articles, query), method: "extractive" };
 }
