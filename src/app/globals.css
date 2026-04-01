@@ -214,3 +214,69 @@
   font-style: italic;
   color: var(--color-text-secondary);
 }
+
+/* ─── Topic tile: SVG draw-on animation ───────────────────────────────────
+   pathLength="1" normalises all stroke lengths to a 0–1 space.
+   At rest:  dashoffset = 0 → strokes are fully visible (faint via wrapper opacity).
+   On hover: 'ink-draw' animation replays each stroke from invisible → visible,
+             staggered by child-index for a hand-inking feel. */
+
+.doodle-path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;   /* visible at rest */
+}
+
+@keyframes ink-draw {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+
+.topic-tile:hover .doodle-path {
+  animation: ink-draw 0.55s ease-out both;
+}
+
+/* Stagger: each child draws in slightly after the previous */
+.topic-tile:hover .doodle-path:nth-child(2)  { animation-delay: 0.03s; }
+.topic-tile:hover .doodle-path:nth-child(3)  { animation-delay: 0.06s; }
+.topic-tile:hover .doodle-path:nth-child(4)  { animation-delay: 0.09s; }
+.topic-tile:hover .doodle-path:nth-child(5)  { animation-delay: 0.12s; }
+.topic-tile:hover .doodle-path:nth-child(6)  { animation-delay: 0.15s; }
+.topic-tile:hover .doodle-path:nth-child(7)  { animation-delay: 0.18s; }
+.topic-tile:hover .doodle-path:nth-child(8)  { animation-delay: 0.21s; }
+.topic-tile:hover .doodle-path:nth-child(9)  { animation-delay: 0.24s; }
+.topic-tile:hover .doodle-path:nth-child(10) { animation-delay: 0.27s; }
+.topic-tile:hover .doodle-path:nth-child(11) { animation-delay: 0.30s; }
+.topic-tile:hover .doodle-path:nth-child(12) { animation-delay: 0.33s; }
+.topic-tile:hover .doodle-path:nth-child(13) { animation-delay: 0.36s; }
+.topic-tile:hover .doodle-path:nth-child(14) { animation-delay: 0.39s; }
+.topic-tile:hover .doodle-path:nth-child(15) { animation-delay: 0.42s; }
+.topic-tile:hover .doodle-path:nth-child(16) { animation-delay: 0.45s; }
+.topic-tile:hover .doodle-path:nth-child(17) { animation-delay: 0.48s; }
+.topic-tile:hover .doodle-path:nth-child(18) { animation-delay: 0.51s; }
+.topic-tile:hover .doodle-path:nth-child(19) { animation-delay: 0.54s; }
+
+/* Doodle wrapper: faint at rest, bright on hover */
+.doodle-wrapper {
+  opacity: 0.18;
+  transition: opacity 0.3s ease;
+}
+.topic-tile:hover .doodle-wrapper { opacity: 0.55; }
+
+/* Edition badge: hidden → slides in on hover */
+.edition-badge {
+  opacity: 0;
+  transform: translateY(-5px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.topic-tile:hover .edition-badge {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Grid tile entrance animation */
+@keyframes tile-enter {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.tile-enter { animation: tile-enter 0.5s ease-out forwards; opacity: 0; }
+

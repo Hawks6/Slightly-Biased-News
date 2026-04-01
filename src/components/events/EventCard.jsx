@@ -9,7 +9,7 @@ export default function EventCard({ event, onClick }) {
   });
 
   return (
-    <div 
+    <div
       onClick={() => onClick(event)}
       className="glass-card group p-6 cursor-pointer transform transition-all duration-300 hover:scale-[1.02] hover:border-indigo-500/40 relative overflow-hidden flex flex-col h-full border"
       style={{ borderColor: "var(--color-rule-line)", background: "var(--color-bg-surface)" }}
@@ -25,7 +25,7 @@ export default function EventCard({ event, onClick }) {
       </div>
 
       {/* Title */}
-      <h3 
+      <h3
         className="text-2xl font-bold mb-4 leading-tight group-hover:text-indigo-400 transition-colors"
         style={{ fontFamily: "var(--font-display)", color: "var(--color-text-primary)" }}
       >
@@ -44,8 +44,8 @@ export default function EventCard({ event, onClick }) {
         <div className="flex items-center gap-2">
           <div className="flex -space-x-2">
             {event.articles?.slice(0, 3).map((a, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[8px] font-bold overflow-hidden bg-gray-100"
                 style={{ borderColor: "var(--color-bg-surface)" }}
                 title={a.source.name}
@@ -58,7 +58,7 @@ export default function EventCard({ event, onClick }) {
             <Users size={12} /> {event.sourceCount} Sources
           </span>
         </div>
-        
+
         <ChevronRight size={16} className="text-gray-400 group-hover:text-indigo-400 transition-transform group-hover:translate-x-1" />
       </div>
     </div>
