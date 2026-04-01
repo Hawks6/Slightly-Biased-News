@@ -75,10 +75,10 @@ export default function EventFeed({ topic, onEventSelect }) {
       {/* Grid Layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
         {events.map((event, idx) => (
-          <EventCard 
-            key={event.id || idx} 
-            event={event} 
-            onClick={onEventSelect} 
+          <EventCard
+            key={event.id || idx}
+            event={event}
+            onClick={onEventSelect}
           />
         ))}
       </div>

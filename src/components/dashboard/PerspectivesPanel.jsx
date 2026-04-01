@@ -45,7 +45,7 @@ export default function PerspectivesPanel({ perspectives }) {
             </p>
             {data.sources && data.sources.length > 0 && (
               <div className="flex flex-wrap gap-1">
-                {data.sources.map((s) => (
+                {Array.from(new Set(data.sources)).map((s) => (
                   <span key={s} className="px-2 py-0.5 text-[10px] rounded-full"
                     style={{ background: "var(--color-bg-card)", color: "var(--color-text-tertiary)" }}>
                     {s}
