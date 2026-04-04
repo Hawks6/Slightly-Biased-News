@@ -189,7 +189,8 @@ export default function SlightlyBiasedApp() {
 
                     <PerspectivesPanel perspectives={data.perspectives} />
                     <TimelinePanel timeline={data.timeline} />
-                    <DiffsPanel diffs={data.diffs} />
+                    <DiffsPanel diffs={data.diffs} sourceCards={data.sourceCards} />
+
                     <SourceCards sourceCards={data.sourceCards} />
                   </div>
                 )}

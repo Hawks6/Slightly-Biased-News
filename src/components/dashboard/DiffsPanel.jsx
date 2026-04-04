@@ -1,9 +1,12 @@
 import { FileWarning } from "lucide-react";
 import clsx from "clsx";
 import { BIAS_TAG_CLASS } from "../Constants";
+import FramingMatrix from "./FramingMatrix";
 
-export default function DiffsPanel({ diffs }) {
+
+export default function DiffsPanel({ diffs, sourceCards }) {
   if (!diffs) return null;
+
 
   return (
     <div className="glass-card p-6 mb-8 animate-fade-in-up">
@@ -26,32 +29,12 @@ export default function DiffsPanel({ diffs }) {
         </span>
       </div>
 
-      {/* Contradictions */}
-      {diffs.contradictions && diffs.contradictions.length > 0 && (
-        <div className="mb-5">
-          <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--color-text-tertiary)" }}>
-            Framing Contrasts
-          </h3>
-          <div className="space-y-3">
-            {diffs.contradictions.map((c, i) => (
-              <div key={i} className="p-3 rounded-lg" style={{ background: "var(--color-bg-tertiary)" }}>
-                <p className="text-xs leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-                  {c.description}
-                </p>
-                <div className="flex items-center gap-3 mt-2">
-                  <span className="px-2 py-0.5 text-[10px] font-mono rounded bg-blue-500/10 text-blue-400">
-                    &quot;{c.left?.keyword || "Left"}&quot;
-                  </span>
-                  <span className="text-[10px]" style={{ color: "var(--color-text-tertiary)" }}>vs</span>
-                  <span className="px-2 py-0.5 text-[10px] font-mono rounded bg-red-500/10 text-red-400">
-                    &quot;{c.right?.keyword || "Right"}&quot;
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Framing Matrix — replaces noisy pairwise text list */}
+      <FramingMatrix sourceCards={sourceCards} />
+
+      {/* Spacer between matrix and charged language section */}
+      {diffs.loadedLanguage && diffs.loadedLanguage.length > 0 && <div className="mb-5" />}
+
 
       {/* Loaded Language */}
       {diffs.loadedLanguage && diffs.loadedLanguage.length > 0 && (
