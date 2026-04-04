@@ -1,6 +1,7 @@
 import { fetchNews } from "@/lib/agents/01_news_fetcher";
 import { normalizeArticles } from "@/lib/agents/02_article_normalizer";
 import { clusterArticles } from "@/lib/agents/11_event_clusterer";
+import { CACHE_KEYS, CACHE_TTL, cacheGet, cacheSet } from "@/lib/redis";
 
 /**
  * GET /api/events?topic=<slug>
@@ -17,8 +18,13 @@ export async function GET(request) {
     );
   }
 
+  const cacheKey = CACHE_KEYS.events(topic);
+  const cached = await cacheGet(cacheKey);
+  if (cached) {
+    return Response.json({ ...cached, cached: true });
+  }
+
   try {
-    // 1. Fetch raw news (limit to top 40 for clustering efficiency)
     const { articles: rawArticles, source: fetchSource } = await fetchNews(topic);
     
     if (!rawArticles || rawArticles.length === 0) {
@@ -28,20 +34,21 @@ export async function GET(request) {
       );
     }
 
-    // 2. Normalize 
     const normalized = normalizeArticles(rawArticles);
-
-    // 3. Cluster into events (AI with Fallback)
     const events = await clusterArticles(normalized);
 
-    return Response.json({
+    const payload = {
       topic,
       events,
       totalArticles: normalized.length,
       clusteredCount: events.reduce((sum, e) => sum + e.sourceCount, 0),
       fetchSource,
       timestamp: new Date().toISOString()
-    });
+    };
+
+    await cacheSet(cacheKey, payload, CACHE_TTL.EVENTS);
+
+    return Response.json({ ...payload, cached: false });
 
   } catch (error) {
     console.error("[Events API Error]", error);

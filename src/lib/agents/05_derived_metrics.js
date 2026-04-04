@@ -211,36 +211,42 @@ export function highlightDiffs(articles, perspectives) {
   const contradictions = [];
   const loadedLanguage = [];
 
-  // Loaded language detection (opinionated/emotional words)
-  const LOADED_WORDS = [
-    "slammed", "blasted", "destroyed", "outraged", "shocking",
-    "radical", "extremist", "crisis", "disaster", "unprecedented",
-    "controversial", "propaganda", "scheme", "agenda", "regime",
-    "crushed", "soaring", "plummeting", "bombshell", "explosive",
-    "struggling", "suffering", "thriving", "booming", "collapsing",
-    "pressures", "attacks", "defends", "warns", "fears",
-  ];
-
+  // Dynamic Charged language detection from Agent 13
   articles.forEach((article) => {
-    const content = (article.title + " " + (article.content || "")).toLowerCase();
-    const found = LOADED_WORDS.filter((word) => content.includes(word));
-
-    if (found.length > 0) {
+    if (article.valence?.chargedLanguage && article.valence.chargedLanguage.length > 0) {
       loadedLanguage.push({
         articleId: article.id,
         source: article.source.name,
         bias: article.bias,
-        words: found,
-        intensity: Math.min(10, found.length * 2),
+        words: article.valence.chargedLanguage,
+        intensity: article.valence.intensity || 5,
+        tone: article.valence.toneLabel,
       });
     }
   });
 
-  // Contradiction detection between left and right perspectives
-  const leftArticles = articles.filter((a) => a.bias === "left" || a.bias === "center-left");
-  const rightArticles = articles.filter((a) => a.bias === "right" || a.bias === "center-right");
+  // Inclusive Contrast detection across all sources
+  for (let i = 0; i < articles.length; i++) {
+    for (let j = i + 1; j < articles.length; j++) {
+      const a1 = articles[i];
+      const a2 = articles[j];
 
-  // Look for antonym pairs in framing
+      if (a1.framing?.label && a2.framing?.label && a1.framing.label !== a2.framing.label && a1.framing.label !== "Neutral" && a2.framing.label !== "Neutral") {
+        // Only add if they are from different bias groups OR if their framing is fundamentally different
+        const biasDiff = a1.bias !== a2.bias;
+        
+        contradictions.push({
+          type: "narrative_contrast",
+          left: { source: a1.source.name, articleId: a1.id, keyword: a1.framing.label, bias: a1.bias },
+          right: { source: a2.source.name, articleId: a2.id, keyword: a2.framing.label, bias: a2.bias },
+          biasDiff,
+          description: `"${a1.source.name}" frames this as a ${a1.framing.label} issue, while "${a2.source.name}" focuses on ${a2.framing.label}.`,
+        });
+      }
+    }
+  }
+
+  // Look for antonym pairs in framing (still useful for keyword level)
   const FRAMING_PAIRS = [
     { positive: ["rally", "surge", "growth", "recover", "gain"], negative: ["decline", "drop", "weakness", "loss", "fall"] },
     { positive: ["boost", "uplift", "benefit", "improve"], negative: ["hurt", "damage", "harm", "worsen"] },
@@ -248,31 +254,33 @@ export function highlightDiffs(articles, perspectives) {
     { positive: ["confidence", "optimism", "hope"], negative: ["fear", "concern", "worry", "anxiety"] },
   ];
 
-  leftArticles.forEach((leftArt) => {
-    rightArticles.forEach((rightArt) => {
-      const leftContent = (leftArt.title + " " + (leftArt.content || "")).toLowerCase();
-      const rightContent = (rightArt.title + " " + (rightArt.content || "")).toLowerCase();
+  for (let i = 0; i < articles.length; i++) {
+    for (let j = i + 1; j < articles.length; j++) {
+      const a1 = articles[i];
+      const a2 = articles[j];
+      const content1 = (a1.title + " " + (a1.description || "")).toLowerCase();
+      const content2 = (a2.title + " " + (a2.description || "")).toLowerCase();
 
       FRAMING_PAIRS.forEach((pair) => {
-        const leftHasPositive = pair.positive.some((w) => leftContent.includes(w));
-        const rightHasNegative = pair.negative.some((w) => rightContent.includes(w));
-        const leftHasNegative = pair.negative.some((w) => leftContent.includes(w));
-        const rightHasPositive = pair.positive.some((w) => rightContent.includes(w));
+        const hasPos1 = pair.positive.some((w) => content1.includes(w));
+        const hasNeg2 = pair.negative.some((w) => content2.includes(w));
+        const hasNeg1 = pair.negative.some((w) => content1.includes(w));
+        const hasPos2 = pair.positive.some((w) => content2.includes(w));
 
-        if ((leftHasPositive && rightHasNegative) || (leftHasNegative && rightHasPositive)) {
-          const leftWord = pair.positive.find((w) => leftContent.includes(w)) || pair.negative.find((w) => leftContent.includes(w));
-          const rightWord = pair.negative.find((w) => rightContent.includes(w)) || pair.positive.find((w) => rightContent.includes(w));
+        if ((hasPos1 && hasNeg2) || (hasNeg1 && hasPos2)) {
+          const w1 = pair.positive.find((w) => content1.includes(w)) || pair.negative.find((w) => content1.includes(w));
+          const w2 = pair.negative.find((w) => content2.includes(w)) || pair.positive.find((w) => content2.includes(w));
 
           contradictions.push({
             type: "framing_contrast",
-            left: { source: leftArt.source.name, articleId: leftArt.id, keyword: leftWord },
-            right: { source: rightArt.source.name, articleId: rightArt.id, keyword: rightWord },
-            description: `"${leftArt.source.name}" uses "${leftWord}" while "${rightArt.source.name}" uses "${rightWord}" to describe the same events.`,
+            left: { source: a1.source.name, articleId: a1.id, keyword: w1 },
+            right: { source: a2.source.name, articleId: a2.id, keyword: w2 },
+            description: `"${a1.source.name}" uses "${w1}" while "${a2.source.name}" uses "${w2}" to describe the same events.`,
           });
         }
       });
-    });
-  });
+    }
+  }
 
   // De-duplicate contradictions
   const seen = new Set();

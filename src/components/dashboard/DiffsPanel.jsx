@@ -56,20 +56,32 @@ export default function DiffsPanel({ diffs }) {
       {/* Loaded Language */}
       {diffs.loadedLanguage && diffs.loadedLanguage.length > 0 && (
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--color-text-tertiary)" }}>
-            Loaded Language Detected
+          <h3 className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--color-text-tertiary)" }}>
+            Emotional Intensity & Charged Language
           </h3>
-          <div className="flex flex-wrap gap-2">
+          <div className="space-y-4">
             {diffs.loadedLanguage.map((item, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span className={clsx("px-2 py-0.5 text-[10px] rounded-full", BIAS_TAG_CLASS[item.bias] || "bias-center")}>
-                  {item.source}
-                </span>
-                {item.words?.slice(0, 3).map((w) => (
-                  <span key={w} className="px-2 py-0.5 text-[10px] font-mono rounded bg-rose-500/8 text-rose-300 border border-rose-500/15">
-                    {w}
-                  </span>
-                ))}
+              <div key={i} className="flex flex-col gap-2 p-3 rounded-lg border-l-4 border-rose-500/20" style={{ background: "var(--color-bg-tertiary)" }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className={clsx("px-2 py-0.5 text-[10px] rounded-full", BIAS_TAG_CLASS[item.bias] || "bias-center")}>
+                      {item.source}
+                    </span>
+                    <span className="text-[10px] font-medium" style={{ color: "var(--color-text-secondary)" }}>
+                     {item.tone} ({item.intensity}/10)
+                    </span>
+                  </div>
+                  {item.intensity >= 8 && (
+                    <span className="text-[9px] font-bold text-rose-500 uppercase">Abrasive Tone</span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {item.words?.map((w) => (
+                    <span key={w} className="px-2 py-1 text-[10px] font-mono rounded bg-white/40 text-gray-600 border border-black/5 lowercase">
+                      {w}
+                    </span>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
