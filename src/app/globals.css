@@ -180,6 +180,7 @@
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(139, 92, 246, 0.2), rgba(34, 211, 238, 0.1));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
   pointer-events: none;
 }
@@ -190,6 +191,13 @@
 .bias-center { color: var(--color-bias-center); background: rgba(167, 139, 250, 0.12); border: 1px solid rgba(167, 139, 250, 0.2); }
 .bias-center-right { color: var(--color-bias-center-right); background: rgba(249, 115, 22, 0.12); border: 1px solid rgba(249, 115, 22, 0.2); }
 .bias-right { color: var(--color-bias-right); background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.2); }
+
+/* === Framing tag colors === */
+.framing-conflict { color: #990000; background: rgba(153, 0, 0, 0.08); border: 1px solid rgba(153, 0, 0, 0.15); }
+.framing-economic { color: #2E7D32; background: rgba(46, 125, 50, 0.08); border: 1px solid rgba(46, 125, 50, 0.15); }
+.framing-human-interest { color: #0277BD; background: rgba(2, 119, 189, 0.08); border: 1px solid rgba(2, 119, 189, 0.15); }
+.framing-morality { color: #6A1B9A; background: rgba(106, 27, 154, 0.08); border: 1px solid rgba(106, 27, 154, 0.15); }
+.framing-responsibility { color: #EF6C00; background: rgba(239, 108, 0, 0.08); border: 1px solid rgba(239, 108, 0, 0.15); }
 
 /* === Credibility indicator === */
 .credibility-high { color: var(--color-credibility-high); }

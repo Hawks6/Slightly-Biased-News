@@ -5,8 +5,8 @@ import clsx from "clsx";
 export default function AgentStatusBar({ isLoading }) {
   const agents = [
     "News Fetcher", "Normalizer", "Bias Classifier", "Ownership Resolver",
-    "Summarizer", "Reality Scorer", "Perspective Builder", "Timeline Builder",
-    "Diff Highlighter", "Payload Builder",
+    "Framing Detector", "Summarizer", "Reality Scorer", "Perspective Builder", 
+    "Timeline Builder", "Diff Highlighter", "Payload Builder",
   ];
 
   const [activeAgent, setActiveAgent] = useState(0);

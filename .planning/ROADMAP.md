@@ -1,69 +1,32 @@
-# Project Roadmap
+# Roadmap - *Slightly* Biased News
 
-## Phase 1: Event API & Clustering Logic
-**Goal:** Establish the new backend route (`/api/events`) to fetch top raw articles and group them logically into distinct news events using the Groq Llama 3 API.
+## Milestone 1: Event-First Architecture (Hawks6 V2) 
+*Completed: 2026-04-03*
 
-**Requirements:**
-- CLST-01: `/api/events` route structure.
-- CLST-02: Integration of `groq-sdk` with strict system prompt and Zod schema validation for event output.
-- CLST-03: Returning a minimal payload of events, titles, sources, and grouped raw articles.
-- CLST-04: Process finishes within acceptable bounds (<5s).
+- [x] Phase 1: Topic Selector & Category Logic
+- [x] Phase 2: Event clustering API (Groq)
+- [x] Phase 3: Event-First UX Transition (Dashboard refactor)
 
-**Success Criteria:**
-1. A direct API call to `/api/events?category=politics` returns a valid JSON array of events containing actual, non-hallucinated article data.
-2. Grouping strictly adheres to similarity rules (no disparate articles randomly bunched together).
-3. The response time holds up relatively well with ~30-50 fetched articles.
+## Milestone 2: ML Intelligence Layer (Current)
+*Objective: Shift from static bias to dynamic semantic framing.*
 
-**Verification command:** `curl "http://localhost:3000/api/events?category=politics"`
+### Phase 4: Framing Analysis (Agent 12)
+- [ ] Research specific framing taxonomies (SemEval compatible).
+- [ ] Implement `12_framing_detector.js` (Groq zero-shot).
+- [ ] Integrate framing labels into `SourceCards.jsx` and `MetaStrip.jsx`.
 
----
+### Phase 5: Sentiment & Tone Analysis (Agent 13)
+- [ ] Implement `13_valence_analyzer.js` for emotional intensity scoring.
+- [ ] Add "Charged Language" detection to `DiffsPanel.jsx`.
+- [ ] Visualize article "Intensity" on -1.0 to 1.0 valence scale.
 
-## Phase 2: App Data Flow Refactoring
-**Goal:** Modify the core `/api/analyze` 10-agent pipeline to accept an explicit array of pre-fetched articles via POST to prevent double-fetching limits from NewsAPI and unify the payload sequence.
+### Phase 6: The "Reality Ref" (Agent 14)
+- [ ] Implement `14_reality_ref.js`: Neutral baseline generation + Distance scoring.
+- [ ] Build "Framing Diff" view comparing contradictory narratives.
+- [ ] Final Milestone Audit: Cross-source framing reconciliation.
 
-**Requirements:**
-- ARCH-01: Update `api/analyze/route.js` to parse POST JSON bodies containing an `articles: []` array, bypassing `01_news_fetcher` locally.
-- CORE-04 (partial): Guaranteeing that passing the grouped event articles correctly runs through normalizers, bias DB, summarizer, timeline, diffs, and payload builder seamlessly.
+## Future Milestones
 
-**Success Criteria:**
-1. Sending a POST with mock raw articles yields a fully constructed UI dashboard payload without hitting NewsAPI.
-2. The legacy `GET /api/analyze?q=query` logic remains intact or throws a deprecation error.
-3. No internal agent breaks from the payload shift.
-
----
-
-## Phase 3: Event-First UI Migration
-**Goal:** Implement the three-level navigation (Categories → Event Feed → Analysis Data) using minimalist layout designs in `NewsLensApp.jsx`.
-
-**Requirements:**
-- CORE-01: Grid of high-level category tiles on the main view.
-- CORE-02: Clicking a category fetches and reveals the middle "Event Feed" view.
-- CORE-03: Populate minimal event cards.
-- UI-01: Minimal absolute design for event cards.
-- UI-02: Title, count, explicit recency.
-- UI-03: Spinners/loading skeletons while Groq works.
-- UI-04: "Back" navigation.
-
-**Success Criteria:**
-1. Users see the new topic selector grid. Clicking "Tech" brings up ~8 distinct minimal event cards, fetching live via `/api/events`.
-2. Users see a clean loading view while clustering resolves.
-3. Clicking a single event card smoothly sends the POST to `/api/analyze` and transitions the view into the existing Broadsheet Pipeline dashboard exactly for those stories.
-4. Users can hit the back button to view other tech events.
-
-## Traceability
-
-| Requirement ID | Mapped Phase | Status |
-|----------------|--------------|--------|
-| CORE-01 | Phase 3 | Pending |
-| CORE-02 | Phase 3 | Pending |
-| CORE-03 | Phase 3 | Pending |
-| CORE-04 | Phase 2, 3 | Pending |
-| CLST-01 | Phase 1 | Pending |
-| CLST-02 | Phase 1 | Pending |
-| CLST-03 | Phase 1 | Pending |
-| CLST-04 | Phase 1 | Pending |
-| UI-01 | Phase 3 | Pending |
-| UI-02 | Phase 3 | Pending |
-| UI-03 | Phase 3 | Pending |
-| UI-04 | Phase 3 | Pending |
-| ARCH-01 | Phase 2 | Pending |
+- Milestone 3: Real-time source fingerprinting (Local embeddings).
+- Milestone 4: Performance optimization (Edge-compatible agents).
+- Milestone 5: Monetization & Ad Strategy (Non-intrusive placeholders).

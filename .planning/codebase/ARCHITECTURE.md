@@ -1,80 +1,62 @@
 # Architecture
 
-## Pattern: Multi-Agent Pipeline with Monolithic Frontend
+Slightly Biased News implements a "Multi-Agent Pipeline" architecture designed for deterministic processing of unstructured news data combined with high-reasoning AI synthesis.
 
-The application follows a **sequential multi-agent pipeline** architecture on the backend, feeding a **single monolithic React component** on the frontend.
+> [!TIP]
+> For a more exhaustive technical blueprint, including data models and API specifications, see the [System Design](file:///c:/for%20use/projects-antigravity/slightly%20baised%20newa/.planning/SYSTEM_DESIGN.md).
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    FRONTEND (Client)                     │
-│                                                         │
-│  page.js → NewsLensApp.jsx (1109-line monolith)         │
-│  ┌─────────────┐  ┌──────────────┐  ┌───────────────┐  │
-│  │TopicSelector │→ │BroadsheetFeed│  │ Sidebar       │  │
-│  │(View 1)     │  │(View 2 Main) │  │ (View 2 Side) │  │
-│  └─────────────┘  └──────────────┘  └───────────────┘  │
-│         ↓ fetch(/api/analyze?q=...)                      │
-└─────────────────────────────────────────────────────────┘
-                          │
-┌─────────────────────────────────────────────────────────┐
-│                   BACKEND (Server)                       │
-│                                                         │
-│  src/app/api/analyze/route.js  (Orchestrator)           │
-│  src/app/api/news/route.js     (Lightweight fetcher)    │
-│                                                         │
-│  Pipeline Waves:                                        │
-│  Wave 1: 01_news_fetcher ──→ raw articles               │
-│  Wave 2: 02_article_normalizer ──→ cleaned articles     │
-│  Wave 3: 03_base_intelligence ──→ bias + ownership      │
-│  Wave 4: 04_ai_summarizer + 05_derived_metrics (║)      │
-│          ├─ summarizeArticles (async, Claude/extractive) │
-│          ├─ computeRealityScore (sync)                   │
-│          ├─ buildPerspectives (sync)                     │
-│          └─ buildTimeline (sync)                         │
-│  Wave 5: 05_derived_metrics.highlightDiffs               │
-│  Wave 6: 10_payload_builder ──→ UI_PAYLOAD_SCHEMA        │
-└─────────────────────────────────────────────────────────┘
-```
+## System Pattern: 3-Level Editorial Stack
 
-## Layers
+The application operates on a triple-view state machine to provide a broadsheet-style exploration experience:
 
-### 1. Presentation Layer
-- **Single component:** `src/components/NewsLensApp.jsx` (~1100 lines)
-- Contains all sub-components inline (not extracted to separate files)
-- Two-view state machine: `activeView: "selector" | "feed"`
-- Uses Recharts for data visualization (BarChart, PieChart)
+1.  **Level 1: Semantic Topic Selector**
+    - **Component:** `TopicSelector.jsx`
+    - **Logic:** High-level categorization of news (Politics, Tech, etc.).
+    - **API:** Initializes context for the event feed.
 
-### 2. API Layer
-- **Next.js App Router** API routes (server-side, edge-compatible)
-- `GET /api/analyze?q=<query>` — Full 6-wave agent pipeline
-- `GET /api/news?topic=<id>` — Lightweight fetch + normalize only (no AI analysis)
-- Both routes import agents directly (no service layer abstraction)
+2.  **Level 2: Clustered Event Feed**
+    - **Component:** `EventFeed.jsx`
+    - **Route:** `GET /api/events?topic={topic}`
+    - **Logic:** Fetches ~60 articles and uses the **11_event_clusterer** (Groq Llama 3.3) to group stories covering the same real-world event.
+    - **Goal:** Unify disparate framing into a single "News Event" card.
 
-### 3. Agent Layer (`src/lib/agents/`)
-- 6 agent files implementing 10 logical agents
-- Each file exports pure functions (no classes, no shared state)
-- Agents are numbered by execution order: `01_` through `10_`
-- Only `04_ai_summarizer` is async (external API call); all others are synchronous
+3.  **Level 3: Perspective Analysis Dashboard**
+    - **Component:** `SlightlyBiasedApp.jsx`
+    - **Route:** `POST /api/analyze` 
+    - **Logic:** Receives the clustered articles and runs the full 10-agent enrichment pipeline (Bias tagging, Ownership resolution, AI Framing Analysis, Reality Scoring).
+    - **Goal:** Contrast how different publications frame the same facts.
 
-### 4. Data Flow
-```
-User clicks topic → fetch(/api/analyze?q=topic)
-  → 01_news_fetcher: NewsAPI/GNews/RSS/Fallback → raw articles[]
-  → 02_article_normalizer: clean, truncate, add metadata → normalized[]
-  → 03_base_intelligence: lookup bias DB + ownership DB → enriched[]
-  → 04_ai_summarizer: Claude API or extractive fallback → summary{}
-  → 05_derived_metrics: realityScore, perspectives, timeline, diffs
-  → 10_payload_builder: stitch everything → UI_PAYLOAD_SCHEMA
-  → Response.json(payload)
+## The Agent Pipeline (`src/lib/agents/`)
+
+Each agent is a pure function (input -> output) executing in a deterministic sequence:
+
+| Order | Agent | Function |
+| :--- | :--- | :--- |
+| 01 | **News Fetcher** | Multi-source fallback fetching (NewsAPI -> GNews -> RSS). |
+| 02 | **Article Normalizer** | Schema unification into the `SlightlyBiasedNews` internal spec. |
+| 11 | **Event Clusterer** | Groq-powered zero-shot clustering of raw articles. |
+| 03 | **Base Intelligence** | Lookup-based Bias Classification and Ownership Resolution. |
+| 04 | **AI Summarizer** | Claude/Anthropic synthesis of neutral summaries and framing contrasts. |
+| 05 | **Derived Metrics** | Reality scoring, Timeline construction, and Perspective building. |
+| 10 | **Payload Builder** | Final JSON construction for the React dashboard. |
+
+## Data Flow Diagram
+
+```mermaid
+graph TD
+    UI[React Web App] -->|GET| EVENTS_API[/api/events]
+    EVENTS_API -->|A1_Fetch| NF[News Fetcher]
+    NF -->|A11_Cluster| EC[Event Clusterer]
+    EC -->|Events JSON| UI
+    
+    UI -->|POST Articles| ANALYZE_API[/api/analyze]
+    ANALYZE_API -->|A3_Enrich| BI[Base Intelligence]
+    BI -->|A4_Summarize| AS[AI Summarizer]
+    AS -->|A5_Metrics| DM[Derived Metrics]
+    DM -->|A10_Build| UI
 ```
 
-## Entry Points
-- **Web:** `src/app/page.js` → renders `<NewsLensApp />`
-- **API:** `src/app/api/analyze/route.js` (main pipeline)
-- **API:** `src/app/api/news/route.js` (lightweight news fetch)
-- **Dev server:** `npm run dev` (Next.js dev server)
-
-## Key Abstractions
-- **Agent pattern:** Each agent is a pure function that takes articles in, returns enriched articles out. No shared state, no side effects (except the AI summarizer's API call).
-- **Fallback chain:** The news fetcher gracefully degrades through 4 data sources.
-- **Bias/Ownership databases:** Static lookup tables in `03_base_intelligence.js` — not persisted, not configurable at runtime.
+## Caching Strategy
+- **Layer:** Server-side Redis (Upstash) via `src/lib/redis.js`.
+- **TTL:** 15 minutes for Events, 1 hour for Deep Analysis.
+- **Goal:** Minimize Groq/Anthropic usage and NewsAPI rate limit exhaustion.

@@ -13,3 +13,13 @@ export const BIAS_TAG_CLASS = {
   "center-right": "bias-center-right",
   "right": "bias-right",
 };
+
+export const FRAMING_TAG_CLASS = {
+  "Conflict": "framing-conflict",
+  "Economic": "framing-economic",
+  "Human Interest": "framing-human-interest",
+  "Moral": "framing-moral",
+  "Responsibility": "framing-responsibility",
+  "Policy": "framing-policy",
+  "Leadership": "framing-leadership",
+};

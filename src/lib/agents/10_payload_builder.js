@@ -57,7 +57,20 @@ export function buildPayload({
     biasScore: a.biasScore,
     reliability: a.reliability,
     ownership: a.ownership,
+    framing: a.framing,
+    valence: a.valence,
   }));
+
+  // Compute framing distribution and primary frame
+  const framingDistribution = {};
+  articles.forEach((a) => {
+    if (a.framing && a.framing.label !== "Neutral") {
+      framingDistribution[a.framing.label] = (framingDistribution[a.framing.label] || 0) + 1;
+    }
+  });
+
+  const sortedFrames = Object.entries(framingDistribution).sort((a, b) => b[1] - a[1]);
+  const primaryFraming = sortedFrames.length > 0 ? sortedFrames[0][0] : "Neutral";
 
   // Compute coverage health metrics
   const totalSources = articles.length;
@@ -71,6 +84,7 @@ export function buildPayload({
     totalSources,
     biasCategories,
     hasBothSides,
+    primaryFraming,
     diversityRating:
       biasCategories >= 4 ? "Excellent" :
       biasCategories >= 3 ? "Good" :
@@ -91,6 +105,8 @@ export function buildPayload({
         "article_normalizer",
         "bias_classifier",
         "ownership_resolver",
+        "framing_detector",
+        "valence_analyzer",
         "ai_summarizer",
         "reality_scorer",
         "perspective_builder",

@@ -1,40 +1,27 @@
-# Testing
+# Testing Strategy
 
-## Current State: No Tests
+Slightly Biased News currently relies on a manual/ad-hoc verification strategy centered around specialized debug scripts for backend logic and browser-based UAT for frontend components.
 
-The project currently has **zero test files**. There is no test framework configured, no test scripts in `package.json`, and no CI pipeline.
+## Automated Testing (N/A)
+> [!WARNING]
+> No formal automated test suite (Jest, Vitest, Playwright) is implemented. This is identified as a critical technical debt area for the project.
 
-## What Should Be Tested
+## Manual Verification Scripts
+The project uses specialized Node.js scripts in the root directory for verifying backend agent logic:
 
-### High Priority — Agent Pipeline
-The agent functions in `src/lib/agents/` are pure functions (except `04_ai_summarizer`) and are ideal candidates for unit testing:
+- `test_keywords.mjs`: Validates Jaccard similarity and tokenization logic for the `11_event_clusterer`.
+- `debug_cluster.mjs`: Tests the Groq-powered event clustering with a live (or cached) article pool.
+- `debug_fetch.mjs`: Verifies the sequential fallback chain (NewsAPI -> GNews -> RSS) for article retrieval.
+- `debug_sources.mjs`: Audits the `03_base_intelligence` bias and ownership databases for specific news publishers.
 
-| Agent | Functions | Testability |
-|-------|-----------|-------------|
-| `02_article_normalizer.js` | `normalizeArticles()` | ★★★ Pure, deterministic |
-| `03_base_intelligence.js` | `classifyBias()`, `resolveOwnership()` | ★★★ Pure lookup |
-| `05_derived_metrics.js` | `computeRealityScore()`, `buildPerspectives()`, `buildTimeline()`, `highlightDiffs()` | ★★★ Pure, complex logic |
-| `10_payload_builder.js` | `buildPayload()` | ★★★ Pure assembly |
-| `01_news_fetcher.js` | `fetchNews()` | ★★ Requires mocking fetch |
-| `04_ai_summarizer.js` | `summarizeArticles()` | ★★ Requires mocking Anthropic API |
+## UI Verification (UAT Protos)
+Frontend components are verified manually by navigating the application state machine:
+- **Topic Selection:** Verifying that category tiles trigger the correct `/api/events` call.
+- **Event Grid:** Checking that event cards correctly render source counts and recency.
+- **Analysis View:** Ensuring that Recharts and PerspectivesPanel handle the pipeline payload without layout shifts or data type errors.
 
-### Medium Priority — API Routes
-- `src/app/api/analyze/route.js` — Integration test for the full pipeline
-- `src/app/api/news/route.js` — Integration test for lightweight fetch
-
-### Lower Priority — Frontend Components
-- `src/components/NewsLensApp.jsx` — Component tests with React Testing Library
-- View state transitions (selector → feed)
-- Search submission behavior
-
-## Recommended Test Setup
-If tests are added, the natural choice would be:
-- **Framework:** Vitest (aligns with Vite/Next.js ecosystem) or Jest
-- **Component testing:** React Testing Library
-- **API mocking:** `msw` (Mock Service Worker) for external API calls
-- **Coverage:** Focus on agent functions first (highest value, easiest to test)
-
-## Linting
-- ESLint 9 is configured with `eslint-config-next`
-- Run via `npm run lint`
-- No custom rules or overrides observed
+## API Verification
+Endpoints can be verified using `curl` or Postman:
+- `GET /api/events?topic=politics`: Checks clustering performance and JSON schema.
+- `POST /api/analyze`: Verifies the full pipeline with a provided JSON article array.
+- `GET /api/cache/status`: Checks Redis connectivity and TTL status (if available).

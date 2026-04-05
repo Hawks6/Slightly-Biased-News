@@ -1,69 +1,35 @@
-# Technology Stack
+# Tech Stack & Dependencies
 
-## Runtime & Language
-- **Runtime:** Node.js (implied by Next.js 15)
-- **Language:** JavaScript (ES Modules via Next.js, no TypeScript)
-- **JSX dialect:** React JSX (`.jsx` files in `src/components/`)
+The project is built on a modern JavaScript-only stack, leveraging Next.js 15 and React 19 for a high-performance, edge-ready news intelligence platform.
 
-## Framework
-- **Next.js 15.3** — App Router (`src/app/` directory structure)
-  - Server-side API routes in `src/app/api/`
-  - Client components marked with `"use client"` directive
-  - Root layout at `src/app/layout.js`, single page at `src/app/page.js`
+## Core Runtime & Frameworks
+- **Runtime:** Node.js (v18.x or v20.x+)
+- **Framework:** [Next.js 15.3](https://nextjs.org/) (App Router architecture)
+- **UI library:** [React 19.0.0](https://react.dev/)
+- **Language:** Plain JavaScript (ES Modules)
 
-## Frontend Dependencies
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `react` | ^19.0.0 | UI library |
-| `react-dom` | ^19.0.0 | DOM rendering |
-| `recharts` | ^2.15.0 | Charts (BarChart, PieChart for bias visualization) |
-| `lucide-react` | ^0.468.0 | Icon library (Search, Shield, TrendingUp, etc.) |
-| `clsx` | ^2.1.1 | Conditional className utility |
+## Frontend Ecosystem
+- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/) using the `@tailwindcss/postcss` plugin. Custom tokens are defined in `src/app/globals.css`.
+- **Data Visualization:** [Recharts ^2.15.0](https://recharts.org/) for bias distribution charts and pie charts.
+- **Icons:** [Lucide React ^0.468.0](https://lucide.dev/) for navigation and status indicators.
+- **Dynamic Classes:** [clsx ^2.1.1](https://github.com/lukeed/clsx) for conditional styling.
 
-## Styling
-- **Tailwind CSS v4** via `@tailwindcss/postcss` PostCSS plugin
-- Custom design tokens defined in `globals.css` using `@theme` directive
-- Three-font typography system:
-  - `DM Serif Display` — display/headings
-  - `Newsreader` — body text
-  - `DM Sans` — UI elements
-- Fonts loaded via Google Fonts `<link>` tags in `layout.js`
+## Backend & Intelligence Layer
+- **AI Orchestration:** [Groq SDK ^1.1.2](https://github.com/groq/groq-sdk-nodejs) for high-speed event clustering (Llama 3.3 70B).
+- **Schema Validation:** [Zod ^4.3.6](https://zod.dev/) for validating AI responses and API payloads.
+- **Full-Text Extraction:** [@extractus/article-extractor ^8.0.20](https://github.com/extractus/article-extractor) for retrieving clean content from news URLs.
+- **HTML Parsing:** [Cheerio ^1.2.0](https://cheerio.js.org/) for DOM-based extraction and RSS processing.
+- **State/Caching:** [ioredis ^5.10.1](https://github.com/redis/ioredis) for connecting to Upstash/Redis caching layers.
 
-## Backend / Server Dependencies (devDependencies used at build/runtime)
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `@extractus/article-extractor` | ^8.0.20 | Full-text article extraction from URLs |
-| `cheerio` | ^1.2.0 | HTML/XML parsing (RSS feeds, HTML stripping) |
+## Configuration & Environment
+Configuration is managed via standard environment variables (see `.env.example`):
+- `NEWSAPI_KEY`: Primary data source for global news.
+- `GNEWS_KEY`: Secondary data source for higher limits or regional news.
+- `ANTHROPIC_API_KEY`: Used for multi-stage bias analysis and framing explanations.
+- `GROQ_API_KEY`: Required for the `11_event_clusterer` (Llama 3 context).
+- `REDIS_URL`: Connection string for caching analysis results.
 
-## Dev Tooling
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `eslint` | ^9.0.0 | Linting |
-| `eslint-config-next` | ^15.3.0 | Next.js ESLint rules |
-| `tailwindcss` | ^4.0.0 | CSS framework (via PostCSS) |
-
-## Configuration Files
-- `next.config.mjs` — Empty/default Next.js config
-- `postcss.config.mjs` — Registers `@tailwindcss/postcss` plugin
-- `jsconfig.json` — Path alias: `@/*` → `./src/*`
-- `.env.example` — Documents required environment variables
-- `.gitignore` — Standard Next.js ignores
-
-## Environment Variables
-| Variable | Required | Purpose |
-|----------|----------|---------|
-| `NEWSAPI_KEY` | Optional | NewsAPI.org API key for article fetching |
-| `GNEWS_KEY` | Optional | GNews.io API key (secondary source) |
-| `ANTHROPIC_API_KEY` | Optional | Anthropic Claude API for AI-powered summaries |
-
-All API keys are optional — the system gracefully degrades through a fallback chain (NewsAPI → GNews → RSS Scraping → Static mock data).
-
-## Build & Run Scripts
-```json
-{
-  "dev": "next dev",
-  "build": "next build",
-  "start": "next start",
-  "lint": "next lint"
-}
-```
+## Build & Dev Tooling
+- **Build System:** `next build` (Vercel-optimized target)
+- **Linting:** [ESLint ^9.0.0](https://eslint.org/) with `eslint-config-next`
+- **Path Aliases:** Defined in `jsconfig.json` (`@/*` -> `./src/*`)

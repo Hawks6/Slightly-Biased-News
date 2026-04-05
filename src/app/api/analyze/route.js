@@ -14,39 +14,45 @@ import {
   buildTimeline,
   highlightDiffs,
 } from "@/lib/agents/05_derived_metrics";
+import { detectFraming } from "@/lib/agents/12_framing_detector";
+import { analyzeValence } from "@/lib/agents/13_valence_analyzer";
 import { buildPayload } from "@/lib/agents/10_payload_builder";
+import { CACHE_KEYS, CACHE_TTL, cacheGet, cacheSet } from "@/lib/redis";
 
 /**
  * Shared pipeline execution logic.
  */
 async function runPipeline(articles, query, fetchSource) {
-  // === Wave 2: Normalize ===
-  // Always run normalization to ensure readTime, contentLength and ID constraints.
   const normalized = normalizeArticles(articles);
 
   if (normalized.length === 0) {
     throw new Error("no_valid_articles");
   }
 
-  // === Wave 3: Classify Bias + Resolve Ownership (parallel) ===
   const biased = classifyBias(normalized);
   const enriched = resolveOwnership(biased);
-
-  // === Wave 4: Summarize + Score + Perspectives + Timeline (parallel) ===
-  const [summary, realityScore, perspectives, timeline] = await Promise.all([
+  
+  const [summary, realityScore, perspectives, timeline, framedArticles, valenceArticles] = await Promise.all([
     summarizeArticles(enriched, query),
     Promise.resolve(computeRealityScore(enriched)),
     Promise.resolve(buildPerspectives(enriched)),
     Promise.resolve(buildTimeline(enriched)),
+    detectFraming(enriched),
+    analyzeValence(enriched),
   ]);
 
-  // === Wave 5: Diff Highlighter ===
-  const diffs = highlightDiffs(enriched, perspectives);
+  // Merge results
+  const analysisMap = new Map(valenceArticles.map(a => [a.id, a.valence]));
+  const fullyEnriched = framedArticles.map(a => ({
+    ...a,
+    valence: analysisMap.get(a.id)
+  }));
 
-  // === Wave 6: Payload Builder ===
+  const diffs = highlightDiffs(fullyEnriched, perspectives);
+
   return buildPayload({
     query,
-    articles: enriched,
+    articles: fullyEnriched,
     summary,
     realityScore,
     perspectives,
@@ -70,10 +76,18 @@ export async function GET(request) {
     );
   }
 
+  const cacheKey = CACHE_KEYS.analyze(query);
+  const cached = await cacheGet(cacheKey);
+  if (cached) {
+    return Response.json({ ...cached, cached: true });
+  }
+
   try {
     const { articles: rawArticles, source: fetchSource } = await fetchNews(query);
     const payload = await runPipeline(rawArticles, query, fetchSource);
-    return Response.json(payload);
+    
+    await cacheSet(cacheKey, payload, CACHE_TTL.SUMMARY);
+    return Response.json({ ...payload, cached: false });
   } catch (error) {
     if (error.message === "no_valid_articles") {
       return Response.json({ error: "No valid articles found." }, { status: 404 });
@@ -99,10 +113,17 @@ export async function POST(request) {
       return Response.json({ error: "Missing 'query' (Event Title)." }, { status: 400 });
     }
 
-    // Limit to top 20 for analysis performance
+    const cacheKey = CACHE_KEYS.analyze(query);
+    const cached = await cacheGet(cacheKey);
+    if (cached) {
+      return Response.json({ ...cached, cached: true });
+    }
+
     const articlesToProcess = articles.slice(0, 20);
     const payload = await runPipeline(articlesToProcess, query, "provided_payload");
-    return Response.json(payload);
+    
+    await cacheSet(cacheKey, payload, CACHE_TTL.SUMMARY);
+    return Response.json({ ...payload, cached: false });
 
   } catch (error) {
     if (error.message === "no_valid_articles") {

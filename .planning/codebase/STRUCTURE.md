@@ -1,69 +1,44 @@
-# Directory Structure
+# Project Structure
 
-```
-slightly-biased-news/
-├── .env.example                    # Environment variable documentation
-├── .gitignore                      # Standard Next.js ignores
-├── README.md                       # Project readme
-├── agent-prompts.md                # Original 3-prompt scaffold spec (historical)
-├── design.md                       # UI/UX design system specification
-├── jsconfig.json                   # Path aliases (@/* → ./src/*)
-├── next.config.mjs                 # Next.js config (empty/default)
-├── package.json                    # Dependencies and scripts
-├── package-lock.json               # Lockfile
-├── postcss.config.mjs              # PostCSS with Tailwind CSS v4
-│
-├── .planning/                      # GSD planning artifacts
-│   └── codebase/                   # Codebase mapping documents (this directory)
-│
-├── src/
-│   ├── app/                        # Next.js App Router
-│   │   ├── globals.css             # Global styles, design tokens, animations
-│   │   ├── layout.js               # Root HTML layout (fonts, metadata)
-│   │   ├── page.js                 # Root page (renders NewsLensApp)
-│   │   └── api/
-│   │       ├── analyze/
-│   │       │   └── route.js        # GET /api/analyze — Full agent pipeline
-│   │       └── news/
-│   │           └── route.js        # GET /api/news — Lightweight news fetch
-│   │
-│   ├── components/
-│   │   └── NewsLensApp.jsx         # Monolithic UI component (~1100 lines)
-│   │                               #   Contains: TopicSelector, TopicSelectorSearch,
-│   │                               #   TrendingTicker, SearchBar, TopicTabs,
-│   │                               #   AgentStatusBar, BroadsheetFeed, MetaStrip,
-│   │                               #   SummaryCard, BiasDistributionChart,
-│   │                               #   RealityScoreBreakdown, PerspectivesPanel,
-│   │                               #   TimelinePanel, DiffsPanel, SourceCards
-│   │
-│   └── lib/
-│       └── agents/                 # Multi-agent pipeline modules
-│           ├── 01_news_fetcher.js      # News source aggregator (233 lines)
-│           ├── 02_article_normalizer.js # Data cleaning/standardization (68 lines)
-│           ├── 03_base_intelligence.js  # Bias + ownership lookup (91 lines)
-│           ├── 04_ai_summarizer.js      # Claude AI / extractive fallback (137 lines)
-│           ├── 05_derived_metrics.js    # Reality score, perspectives, timeline, diffs (292 lines)
-│           └── 10_payload_builder.js    # Final JSON assembly (112 lines)
+Slightly Biased News follows a modern Next.js 15 App Router architecture with a decoupled logic layer for AI agents.
+
+## Core Directory Layout
+
+```text
+├── .Planning/          # GSD workflow documentation
+│   └── codebase/       # Deep codebase mapping files
+├── .agent/             # GSD skill systems and subagent configurations
+├── public/             # Static assets (favicons, etc.)
+├── src/                
+│   ├── app/            # Next.js App Router (Layouts and API routes)
+│   │   ├── api/        # Backend orchestrators (/analyze, /events)
+│   │   ├── globals.css # CSS configuration with Tailwind v4 theme
+│   │   ├── layout.js   # Global structure and fonts
+│   │   └── page.js     # Main entry point (renders SlightlyBiasedApp)
+│   ├── components/     # Modular UI components
+│   │   ├── common/     # Reusable UI (SearchBar, Footer, Ticker)
+│   │   ├── dashboard/  # Perspective Analysis components (Recharts)
+│   │   ├── events/     # Event Feed and Grid components
+│   │   └── ...         # TopicSelector, TopicTabs
+│   ├── lib/            # Shared utilities
+│   │   ├── agents/     # Core intelligence logic (11 agent files)
+│   │   └── redis.js    # Caching helper functions
 ```
 
-## Key Locations
+## Key File Locations
 
-| What | Where |
-|------|-------|
-| Design tokens & CSS variables | `src/app/globals.css` (lines 3-35) |
-| Font loading | `src/app/layout.js` (lines 14-19) |
-| SEO metadata | `src/app/layout.js` (lines 3-8) |
-| Main UI component | `src/components/NewsLensApp.jsx` |
-| API orchestrator | `src/app/api/analyze/route.js` |
-| Bias rating database | `src/lib/agents/03_base_intelligence.js` (lines 9-30) |
-| Ownership database | `src/lib/agents/03_base_intelligence.js` (lines 32-50) |
-| Fallback article data | `src/lib/agents/01_news_fetcher.js` (lines 10-91) |
-| Claude AI integration | `src/lib/agents/04_ai_summarizer.js` (lines 7-60) |
-| Design specification | `design.md` (root) |
-| Agent prompt history | `agent-prompts.md` (root) |
+| File Basename | Responsibility |
+| :--- | :--- |
+| `src/app/page.js` | Entry point for the Client Application. |
+| `src/components/SlightlyBiasedApp.jsx` | Core state machine and view orchestrator. |
+| `src/app/api/analyze/route.js` | Main backend pipeline for 10-wave perspective analysis. |
+| `src/lib/agents/01_news_fetcher.js` | Multi-source article retrieval with fallback logic. |
+| `src/lib/agents/11_event_clusterer.js` | Groq-powered clustering agent. |
+| `src/app/globals.css` | Design system tokens and custom Tailwind styles. |
 
 ## Naming Conventions
-- **Agent files:** Numbered prefix `NN_snake_case.js` (e.g. `01_news_fetcher.js`)
-- **API routes:** Next.js convention `route.js` inside feature directories
-- **Components:** PascalCase function names, single `.jsx` file
-- **CSS:** BEM-ish class names (`.glass-card`, `.bias-left`, `.agent-spinner`)
+- **Components:** PascalCase (e.g., `EventFeed.jsx`).
+- **Agents:** Sequential numbering prefixed with snake_case (e.g., `04_ai_summarizer.js`).
+- **API Routes:** kebab-case directory structure (e.g., `/api/analyze/route.js`).
+- **Variables:** camelCase (e.g., `activeView`, `selectedTopic`).
+- **Design Tokens:** CSS custom properties (e.g., `--color-accent-brand`).

@@ -1,4 +1,4 @@
-import { Newspaper, Activity, Scale, Shield } from "lucide-react";
+import { Newspaper, Binary, Scale, Shield } from "lucide-react";
 
 export default function MetaStrip({ meta, coverageHealth }) {
   if (!meta || !coverageHealth) return null;
@@ -11,9 +11,9 @@ export default function MetaStrip({ meta, coverageHealth }) {
       color: "var(--color-accent-indigo)",
     },
     {
-      icon: <Activity size={16} />,
-      label: "Agents Executed",
-      value: meta.processingAgents?.length || 0,
+      icon: <Binary size={16} />,
+      label: "Primary Framing",
+      value: coverageHealth.primaryFraming || "Neutral",
       color: "var(--color-accent-violet)",
     },
     {
