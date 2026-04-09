@@ -107,7 +107,7 @@ export default function PerspectivesPanel({ perspectives }) {
       </div>
 
       {/* ── Coverage Balance Bar ── */}
-      {perspectives.balance && (
+      {perspectives.balance && perspectives.balance.total > 0 && (
         <div className="mt-8 pt-4 border-t" style={{ borderColor: "var(--color-rule-line)" }}>
           <div className="flex items-center gap-4">
             <span 

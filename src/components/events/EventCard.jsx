@@ -33,6 +33,9 @@ export default function EventCard({ event, onClick, index = 0 }) {
   return (
     <article
       onClick={() => onClick(event)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(event); } }}
       className="group cursor-pointer flex flex-col h-full overflow-hidden transition-all duration-300
                  hover:-translate-y-1 hover:shadow-lg"
       style={{
@@ -164,7 +167,7 @@ export default function EventCard({ event, onClick, index = 0 }) {
                        transition-all duration-200 translate-x-1 group-hover:translate-x-0"
             style={{ color: accent.dot, fontFamily: "var(--font-ui)" }}
           >
-            <span>Analyse</span>
+            <span>Analyze</span>
             <ChevronRight size={13} className="transition-transform duration-200 group-hover:translate-x-0.5" />
           </div>
         </div>

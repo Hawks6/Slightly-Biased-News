@@ -1,6 +1,5 @@
 import { Clock } from "lucide-react";
-import clsx from "clsx";
-import { BIAS_COLORS, BIAS_TAG_CLASS } from "../Constants";
+import { BIAS_COLORS } from "../Constants";
 
 export default function TimelinePanel({ timeline }) {
   if (!timeline || !timeline.events) return null;

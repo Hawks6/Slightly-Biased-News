@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Search, Loader2 } from "lucide-react";
-import clsx from "clsx";
+import { Search } from "lucide-react";
 
 export default function SearchBar({ onSearch, isLoading }) {
   const [query, setQuery] = useState("");

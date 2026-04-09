@@ -1,4 +1,4 @@
-import { ShieldCheck, ChevronRight, Eye, FileText } from "lucide-react";
+import { Eye, FileText } from "lucide-react";
 
 export default function SummaryCard({ summary, realityScore }) {
   if (!summary || !realityScore) return null;
