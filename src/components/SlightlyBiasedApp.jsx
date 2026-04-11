@@ -82,11 +82,8 @@ export default function SlightlyBiasedApp() {
   }, [performAnalysis]);
 
   const handleDirectSearch = useCallback((query) => {
-    performAnalysis({
-      method: "GET",
-      query: query
-    });
-  }, [performAnalysis]);
+    handleTopicSelect(query);
+  }, [handleTopicSelect]);
 
   const goHome = useCallback(() => {
     setActiveView("selector");
