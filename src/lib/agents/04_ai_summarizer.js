@@ -1,13 +1,10 @@
-import Groq from "groq-sdk";
+import groq from "@/lib/groq";
+import { cleanText } from "@/lib/utils/text";
 
 /**
  * Agent 04: AI Summarizer
- * Uses the same Groq SDK instance as the event clusterer.
+ * Uses the shared Groq SDK instance.
  */
-
-const groq = new Groq({ 
-  apiKey: process.env.GROQ_API_KEY || "dummy_key_avoid_init_error" 
-});
 
 async function callGroqSummarizer(articles, query) {
   if (!process.env.GROQ_API_KEY) return null;
@@ -66,22 +63,7 @@ Respond in JSON format:
   return null;
 }
 
-function cleanText(html) {
-  if (!html) return "";
-  // Strip HTML tags
-  let text = String(html).replace(/<[^>]*>?/gm, " ");
-  // Decode common entities
-  text = text
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&[a-zA-Z]+;/g, " "); // Catch any other entities
-  // Remove extra spaces
-  return text.replace(/\s\s+/g, " ").trim();
-}
+
 
 function extractiveSummary(articles, query) {
   const biasGroups = {};

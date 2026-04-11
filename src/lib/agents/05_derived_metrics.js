@@ -7,6 +7,8 @@
  *  - Diff Highlighter (contradiction detection)
  */
 
+import { cleanText } from "@/lib/utils/text";
+
 /**
  * Reality Scorer: Composite credibility score based on
  * source reliability, cross-referencing, and content analysis.
@@ -14,15 +16,12 @@
 export function computeRealityScore(articles) {
   if (articles.length === 0) return { overall: 50, breakdown: {} };
 
-  // Factor 1: Average source reliability
   const avgReliability =
     articles.reduce((sum, a) => sum + (a.reliability || 60), 0) / articles.length;
 
-  // Factor 2: Source diversity (more diverse = more credible topic)
   const uniqueSources = new Set(articles.map((a) => a.source.id)).size;
   const diversityScore = Math.min(100, uniqueSources * 15);
 
-  // Factor 3: Cross-reference agreement (do headlines agree?)
   const titleWords = articles.map((a) =>
     new Set(a.title.toLowerCase().split(/\s+/).filter((w) => w.length > 4))
   );
@@ -53,20 +52,6 @@ export function computeRealityScore(articles) {
       overall >= 60 ? "Moderate Confidence" :
       overall >= 40 ? "Mixed Signals" : "Low Confidence",
   };
-}
-
-function cleanText(html) {
-  if (!html) return "";
-  let text = String(html).replace(/<[^>]*>?/gm, " ");
-  text = text
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&[a-zA-Z]+;/g, " ");
-  return text.replace(/\s\s+/g, " ").trim();
 }
 
 /**

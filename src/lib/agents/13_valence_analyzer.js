@@ -1,22 +1,10 @@
-import Groq from "groq-sdk";
+import groq from "@/lib/groq";
+import { cleanText, truncateWords } from "@/lib/utils/text";
 
 /**
  * Agent 13: Valence Analyzer
  * Measures the "Emotional Temperature" of news reporting using Groq AI.
- *
- * Produces per-article valence metadata:
- *   valence   (-1.0 … 1.0)  — sentiment polarity
- *   intensity (0 … 10)      — emotional intensity
- *   toneLabel               — qualitative label
- *   chargedLanguage          — array of loaded words/phrases
- *
- * Uses batch JSON calling — one Groq request for all articles —
- * to stay within the <4 s latency budget.
  */
-
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY || "dummy_key_avoid_init_error",
-});
 
 const ALLOWED_TONES = [
   "Abrasive",
@@ -34,28 +22,6 @@ const NEUTRAL_VALENCE = {
   toneLabel: "Neutral",
 };
 
-function cleanText(html) {
-  if (!html) return "";
-  let text = String(html).replace(/<[^>]*>?/gm, " ");
-  text = text
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&[a-zA-Z]+;/g, " ");
-  return text.replace(/\s\s+/g, " ").trim();
-}
-
-/**
- * Truncate text to roughly the first N words.
- */
-function truncateWords(text, maxWords = 300) {
-  const words = text.split(/\s+/);
-  if (words.length <= maxWords) return text;
-  return words.slice(0, maxWords).join(" ") + "…";
-}
 
 /**
  * Safely normalize a single valence result from the LLM.

@@ -1,16 +1,5 @@
-import Groq from "groq-sdk";
-
-/**
- * Agent 14: Combined Classifier
- * Performs BOTH framing detection AND valence analysis in a SINGLE Groq API call.
- * Replaces separate calls to Agent 12 (framing) and Agent 13 (valence).
- *
- * Saves ~50% prompt tokens and eliminates one API round-trip.
- */
-
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY || "dummy_key_avoid_init_error",
-});
+import groq from "@/lib/groq";
+import { cleanText, truncateWords } from "@/lib/utils/text";
 
 const ALLOWED_FRAMING = [
   "Conflict", "Economic", "Human Interest", "Moral",
@@ -24,26 +13,6 @@ const ALLOWED_TONES = [
 
 const NEUTRAL_FRAMING = { label: "Neutral", confidence: 1.0, reasoning: "Classification unavailable." };
 const NEUTRAL_VALENCE = { valence: 0, intensity: 2, chargedLanguage: [], toneLabel: "Neutral" };
-
-function cleanText(html) {
-  if (!html) return "";
-  let text = String(html).replace(/<[^>]*>?/gm, " ");
-  text = text
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&[a-zA-Z]+;/g, " ");
-  return text.replace(/\s\s+/g, " ").trim();
-}
-
-function truncateWords(text, maxWords = 300) {
-  const words = text.split(/\s+/);
-  if (words.length <= maxWords) return text;
-  return words.slice(0, maxWords).join(" ") + "…";
-}
 
 function normalizeValence(raw) {
   const valence = typeof raw.valence === "number"

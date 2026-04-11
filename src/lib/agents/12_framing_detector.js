@@ -1,19 +1,10 @@
-import Groq from "groq-sdk";
+import groq from "@/lib/groq";
+import { cleanText, truncateWords } from "@/lib/utils/text";
 
 /**
  * Agent 12: Framing Detector
  * Identifies the "narrative lens" of news articles using Groq AI.
- *
- * Taxonomy (7 lenses): Economic, Moral, Conflict, Responsibility,
- * Human Interest, Policy, Leadership.
- *
- * Uses batch JSON calling — one Groq request for all articles —
- * to stay within the <4s latency budget.
  */
-
-const groq = new Groq({ 
-  apiKey: process.env.GROQ_API_KEY || "dummy_key_avoid_init_error" 
-});
 
 const ALLOWED_LABELS = [
   "Conflict",
@@ -27,28 +18,6 @@ const ALLOWED_LABELS = [
 
 const NEUTRAL_FRAMING = { label: "Neutral", confidence: 1.0, reasoning: "Classification unavailable." };
 
-function cleanText(html) {
-  if (!html) return "";
-  let text = String(html).replace(/<[^>]*>?/gm, " ");
-  text = text
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&[a-zA-Z]+;/g, " ");
-  return text.replace(/\s\s+/g, " ").trim();
-}
-
-/**
- * Truncate text to roughly the first N words.
- */
-function truncateWords(text, maxWords = 300) {
-  const words = text.split(/\s+/);
-  if (words.length <= maxWords) return text;
-  return words.slice(0, maxWords).join(" ") + "…";
-}
 
 /**
  * Detect news framing for a batch of articles via a single Groq call.
