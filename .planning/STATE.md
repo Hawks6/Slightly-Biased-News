@@ -23,3 +23,9 @@ None.
 
 ## Persistent Issues
 None.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260411-qbe | Fix main news feed page missing the heading of the news | 2026-04-11 | PENDING | [260411-qbe-fix-main-news-feed-page-missing-the-head](./quick/260411-qbe-fix-main-news-feed-page-missing-the-head/) |
