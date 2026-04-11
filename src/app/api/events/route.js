@@ -25,7 +25,7 @@ export async function GET(request) {
   }
 
   try {
-    const { articles: rawArticles, source: fetchSource } = await fetchNews(topic);
+    const { articles: rawArticles, source: fetchSource } = await fetchNews(topic, { lightweight: true });
     
     if (!rawArticles || rawArticles.length === 0) {
       return Response.json(

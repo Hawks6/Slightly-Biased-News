@@ -4,14 +4,78 @@ import FALLBACK_ARTICLES from "./fallback_articles.js";
 
 /**
  * Agent 01: News Fetcher
- * Fetches articles from NewsAPI → GNews → Dynamic RSS Scraper (Full Text) → Fallback mock data.
- * Returns an array of raw article objects.
+ * Fetches articles from NewsAPI → GNews → Dynamic RSS Scraper → Fallback mock data.
+ * 
+ * Supports two modes:
+ *   - { lightweight: false } (default) — full-text extraction for analysis pipeline
+ *   - { lightweight: true }  — RSS metadata only (title/description), 10-20× faster for clustering
  */
 
+/**
+ * Lightweight RSS fetch — returns title + description only, no full-text extraction.
+ * Used by the events/clustering route for speed.
+ */
+async function fetchFromRSSLightweight(query) {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
+    const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
+    const res = await fetch(rssUrl, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    
+    const xml = await res.text();
+    const $ = cheerio.load(xml, { xmlMode: true });
+    const articles = [];
+    
+    $("item").each((i, el) => {
+      if (i >= 20) return;
+      const rawDesc = $(el).find("description").text();
+      let cleanDesc = rawDesc;
+      if (rawDesc) {
+        cleanDesc = cheerio.load(rawDesc).text().trim().replace(/\s\s+/g, " ");
+      }
+      
+      const pubDate = $(el).find("pubDate").text();
+      articles.push({
+        source: { id: null, name: $(el).find("source").text() || "Google News" },
+        author: $(el).find("source").text() || "Google News",
+        title: $(el).find("title").text(),
+        description: cleanDesc,
+        url: $(el).find("link").text(),
+        urlToImage: null,
+        publishedAt: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+        content: cleanDesc, // description-only for clustering
+      });
+    });
+
+    if (articles.length > 0) {
+      console.log(`[NewsFetcher] RSS Lightweight: ${articles.length} articles (no full-text extraction)`);
+      return { articles, source: "rss_lightweight" };
+    }
+  } catch (e) {
+    if (e.name === "AbortError") {
+      console.warn("[NewsFetcher] RSS Lightweight: timed out after 8s");
+    } else {
+      console.warn("[NewsFetcher] RSS Lightweight failed:", e.message);
+    }
+  }
+  return null;
+}
+
+/**
+ * Full RSS fetch with article-extractor for full-text content.
+ * Used by the analysis pipeline.
+ */
 async function fetchFromRSS(query) {
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
     const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
-    const res = await fetch(rssUrl);
+    const res = await fetch(rssUrl, { signal: controller.signal });
+    clearTimeout(timeout);
     if (!res.ok) return null;
     
     const xml = await res.text();
@@ -39,12 +103,15 @@ async function fetchFromRSS(query) {
 
     console.log(`[NewsFetcher] RSS Scraper found ${items.length} links, extracting full text for top 20 articles...`);
 
-    // Extract full text for top 20 items in parallel to provide a richer clustering pool
+    // Extract full text with per-article timeout (5s each)
     const articles = await Promise.all(
       items.slice(0, 20).map(async (item) => {
         try {
-          // Use article-extractor to get clean text/metadata
+          const extractController = new AbortController();
+          const extractTimeout = setTimeout(() => extractController.abort(), 5000);
+
           const extracted = await extract(item.link);
+          clearTimeout(extractTimeout);
           
           // Strip HTML tags from content to provide clean text to AI agents
           let cleanContent = item.description;
@@ -83,12 +150,22 @@ async function fetchFromRSS(query) {
       return { articles, source: "rss_full_text" };
     }
   } catch (e) {
-    console.warn("[NewsFetcher] RSS Scraper failed:", e.message);
+    if (e.name === "AbortError") {
+      console.warn("[NewsFetcher] RSS fetch timed out after 8s");
+    } else {
+      console.warn("[NewsFetcher] RSS Scraper failed:", e.message);
+    }
   }
   return null;
 }
 
-export async function fetchNews(query) {
+/**
+ * Main fetch function.
+ * @param {string} query - Search query
+ * @param {Object} options - { lightweight: true } to skip full-text extraction
+ */
+export async function fetchNews(query, options = {}) {
+  const { lightweight = false } = options;
   const newsApiKey = process.env.NEWSAPI_KEY;
   const gnewsKey = process.env.GNEWS_KEY;
 
@@ -138,10 +215,13 @@ export async function fetchNews(query) {
     }
   }
 
-  // Attempt 3: Dynamic RSS Scraper (Best fallback for relevance)
-  const rssData = await fetchFromRSS(query);
-  if (rssData) {
-    return rssData;
+  // Attempt 3: RSS — use lightweight mode when clustering only needs metadata
+  if (lightweight) {
+    const rssData = await fetchFromRSSLightweight(query);
+    if (rssData) return rssData;
+  } else {
+    const rssData = await fetchFromRSS(query);
+    if (rssData) return rssData;
   }
 
   // Attempt 4: Static Fallback (Last resort)
