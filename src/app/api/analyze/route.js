@@ -14,8 +14,7 @@ import {
   buildTimeline,
   highlightDiffs,
 } from "@/lib/agents/05_derived_metrics";
-import { detectFraming } from "@/lib/agents/12_framing_detector";
-import { analyzeValence } from "@/lib/agents/13_valence_analyzer";
+import { classifyArticles } from "@/lib/agents/14_combined_classifier";
 import { buildPayload } from "@/lib/agents/10_payload_builder";
 import { CACHE_KEYS, CACHE_TTL, cacheGet, cacheSet } from "@/lib/redis";
 
@@ -32,21 +31,15 @@ async function runPipeline(articles, query, fetchSource) {
   const biased = classifyBias(normalized);
   const enriched = resolveOwnership(biased);
   
-  const [summary, realityScore, perspectives, timeline, framedArticles, valenceArticles] = await Promise.all([
+  const [summary, realityScore, perspectives, timeline, classifiedArticles] = await Promise.all([
     summarizeArticles(enriched, query),
     Promise.resolve(computeRealityScore(enriched)),
     Promise.resolve(buildPerspectives(enriched)),
     Promise.resolve(buildTimeline(enriched)),
-    detectFraming(enriched),
-    analyzeValence(enriched),
+    classifyArticles(enriched), // Single Groq call for framing + valence
   ]);
 
-  // Merge results
-  const analysisMap = new Map(valenceArticles.map(a => [a.id, a.valence]));
-  const fullyEnriched = framedArticles.map(a => ({
-    ...a,
-    valence: analysisMap.get(a.id)
-  }));
+  const fullyEnriched = classifiedArticles;
 
   const diffs = highlightDiffs(fullyEnriched, perspectives);
 
