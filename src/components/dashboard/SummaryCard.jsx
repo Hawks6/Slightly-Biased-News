@@ -89,8 +89,8 @@ export default function SummaryCard({ summary, realityScore, coverageHealth, que
               </div>
             </div>
 
-            {/* Narrative Analysis (Logic & Takeaways) */}
-            {summary.logic && summary.logic.length > 0 && (
+            {/* Narrative Analysis (Takeaways) */}
+            {summary.takeaways && summary.takeaways.length > 0 && (
               <div className="mt-4">
                 <div 
                   className="text-[10px] uppercase font-bold tracking-widest mb-3 text-gray-500"
@@ -98,8 +98,8 @@ export default function SummaryCard({ summary, realityScore, coverageHealth, que
                 >
                   Narrative Analysis
                 </div>
-                <ul className="space-y-2">
-                  {summary.logic.map((point, idx) => (
+                <ul className="space-y-2 mb-4">
+                  {summary.takeaways.map((point, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="text-[#8b0000] mt-1 text-[10px]">■</span>
                       <span className="text-sm leading-snug" style={{ color: "var(--color-text-secondary)", fontFamily: "var(--font-body)" }}>
