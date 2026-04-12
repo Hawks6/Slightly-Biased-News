@@ -1,34 +1,35 @@
 "use client";
 import { useState } from "react";
 import clsx from "clsx";
+import { Search, Bookmark, CircleUser } from "lucide-react";
 import Footer from "./common/Footer";
 
 // ─── Per-topic personality tints ─────────────────────────────────────────
 const TINTS = {
-  world: "rgba(5,41,98,0.04)",
-  politics: "rgba(161,29,33,0.05)",
-  business: "rgba(46,125,50,0.04)",
-  tech: "rgba(63,81,181,0.04)",
-  climate: "rgba(2,119,189,0.05)",
-  science: "rgba(123,31,162,0.04)",
-  culture: "rgba(230,81,0,0.04)",
-  opinion: "rgba(136,19,55,0.05)",
+  world: "#2F3E46",
+  politics: "#6B4F4F",
+  business: "#3A5A40",
+  tech: "#3D405B",
+  climate: "#4A6D7C",
+  science: "#5C5470",
+  culture: "#7A5C3E",
+  opinion: "#6D6875",
 };
 const TINTS_HOVER = {
-  world: "rgba(5,41,98,0.08)",
-  politics: "rgba(161,29,33,0.09)",
-  business: "rgba(46,125,50,0.08)",
-  tech: "rgba(63,81,181,0.08)",
-  climate: "rgba(2,119,189,0.09)",
-  science: "rgba(123,31,162,0.08)",
-  culture: "rgba(230,81,0,0.08)",
-  opinion: "rgba(136,19,55,0.09)",
+  world: "#394B55",
+  politics: "#7A5B5B",
+  business: "#466B4D",
+  tech: "#484C6C",
+  climate: "#588193",
+  science: "#6C6384",
+  culture: "#8C6A47",
+  opinion: "#807A8A",
 };
 
 // ─── Topic Doodles — every element has pathLength="1" + className="doodle-path"
 // so the CSS draw-on animation works with stroke-dashoffset
 function TopicDoodle({ id }) {
-  const ink = "var(--color-accent-brand)";
+  const ink = "#FFFFFF";
   const dp = "doodle-path"; // shorthand
 
   const doodles = {
@@ -177,24 +178,36 @@ function TopicSelectorSearch({ onSearch }) {
     if (query.trim()) onSearch(query.trim());
   };
   return (
-    <form onSubmit={handleSubmit} className="flex gap-4 max-w-xl">
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Or search for a specific topic..."
-        className="flex-1 bg-white border px-4 py-3 outline-none"
-        style={{ borderColor: "var(--color-rule-line)", color: "var(--color-text-primary)" }}
-        onFocus={(e) => e.currentTarget.style.borderColor = "var(--color-accent-brand)"}
-        onBlur={(e) => e.currentTarget.style.borderColor = "var(--color-rule-line)"}
-      />
-      <button
-        type="submit"
-        className="px-8 py-3 text-white font-bold transition-opacity hover:opacity-90 cursor-pointer"
-        style={{ backgroundColor: "var(--color-accent-brand)" }}
+    <form onSubmit={handleSubmit} className="relative w-full max-w-3xl mx-auto mb-8 group">
+      <div className="relative flex items-center bg-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.06)] border transition-all"
+           style={{ borderColor: "var(--color-rule-line)" }}
+           onFocus={(e) => e.currentTarget.style.borderColor = "var(--color-accent-brand)"}
+           onBlur={(e) => e.currentTarget.style.borderColor = "var(--color-rule-line)"}
       >
-        Analyze &rarr;
-      </button>
+        <Search 
+          className="absolute left-8 text-muted-foreground transition-colors group-focus-within:text-indigo-400" 
+          size={20} 
+          style={{ color: "var(--color-text-muted)" }}
+        />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search global narratives..."
+          className="w-full bg-transparent pl-16 pr-[130px] h-[64px] text-lg outline-none rounded-full"
+          style={{ 
+            color: "var(--color-text-primary)",
+            fontFamily: "var(--font-ui)" 
+          }}
+        />
+        <button
+          type="submit"
+          className="absolute right-2 px-8 h-[48px] text-white font-medium text-sm transition-all hover:brightness-110 cursor-pointer rounded-full active:scale-95"
+          style={{ backgroundColor: "var(--color-accent-brand)" }}
+        >
+          Analyze
+        </button>
+      </div>
     </form>
   );
 }
@@ -213,45 +226,65 @@ export default function TopicSelector({ onSelect }) {
   ];
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 py-12 flex flex-col min-h-screen animate-fade-in-up">
+    <div className="max-w-[1280px] mx-auto px-6 py-8 flex flex-col min-h-screen animate-fade-in-up">
 
-      {/* Masthead */}
-      <div
-        className="flex flex-col md:flex-row md:justify-between md:items-center mb-16 border-b pb-6"
-        style={{ borderColor: "var(--color-rule-heavy)" }}
-      >
+      {/* 1. Masthead */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-20 pt-2">
         <h1
-          className="text-4xl md:text-5xl font-bold tracking-tight mb-4 md:mb-0"
+          className="text-2xl md:text-3xl font-bold tracking-tight mb-4 md:mb-0"
           style={{ fontFamily: "var(--font-display)", color: "var(--color-accent-brand)" }}
         >
           <i className="font-serif italic font-bold">Slightly</i> Biased News
         </h1>
-        <div className="text-sm font-semibold uppercase tracking-widest text-[#6B6B6B]" suppressHydrationWarning>
-          {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+        
+        {/* Navigation Links */}
+        <div className="hidden md:flex items-center gap-8 text-[11px] font-bold uppercase tracking-[0.1em] text-[#6B6B6B]" style={{ fontFamily: "var(--font-ui)" }}>
+          <span className="cursor-pointer border-b-[2px] pb-1" style={{ borderColor: "var(--color-accent-brand)", color: "var(--color-accent-brand)" }}>ANALYSIS</span>
+          <span className="cursor-pointer hover:text-slate-800 transition-colors">WORLD</span>
+          <span className="cursor-pointer hover:text-slate-800 transition-colors">POLITICS</span>
+          <span className="cursor-pointer hover:text-slate-800 transition-colors">CULTURE</span>
+          <span className="cursor-pointer hover:text-slate-800 transition-colors">SCIENCE</span>
+        </div>
+
+        {/* Icons */}
+        <div className="flex items-center gap-5" style={{ color: "var(--color-accent-brand)" }}>
+          <Bookmark size={20} className="cursor-pointer hover:opacity-70 transition-opacity" />
+          <CircleUser size={22} className="cursor-pointer hover:opacity-70 transition-opacity" />
         </div>
       </div>
 
-      {/* Statement */}
-      <div className="mb-16 max-w-2xl">
+      {/* 2. Sub-heading (huge, centered) */}
+      <div className="mb-24 text-center">
         <h2
-          className="text-5xl md:text-7xl mb-4 leading-tight"
+          className="text-5xl md:text-[5.5rem] mb-2 leading-[1.05] font-bold mx-auto tracking-tight"
           style={{ fontFamily: "var(--font-display)", color: "var(--color-text-primary)" }}
         >
-          The world&apos;s stories,<br />without the agenda.
+          <span className="block">The world&apos;s stories,</span>
+          <span className="block">without the agenda.</span>
         </h2>
-        <p
-          className="text-xl md:text-2xl italic mb-8"
-          style={{ fontFamily: "var(--font-body)", color: "var(--color-text-secondary)" }}
-        >
-          Independent &middot; Transparent &middot; Unbiased
-        </p>
-        <div className="text-xs uppercase tracking-widest font-bold" style={{ color: "var(--color-accent-kicker)" }}>
-          Choose Your Edition
-        </div>
       </div>
 
-      {/* Topic Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-16 md:auto-rows-[180px]">
+      {/* 3. The Big Search */}
+      <TopicSelectorSearch onSearch={onSelect} />
+
+      {/* 4. Descriptors */}
+      <p
+        className="text-center text-[10px] md:text-[11px] font-bold tracking-[0.2em] mb-24 opacity-60 uppercase"
+        style={{ fontFamily: "var(--font-ui)", color: "var(--color-text-secondary)" }}
+      >
+        INDEPENDENT &middot; TRANSPARENT &middot; UNBIASED
+      </p>
+
+      {/* 5. Grid Heading */}
+      <h2
+        className="text-center text-2xl md:text-3xl font-bold mb-8"
+        style={{ fontFamily: "var(--font-display)", color: "var(--color-text-primary)" }}
+      >
+        Categorized for Your Convenience and Bias
+      </h2>
+
+      {/* 6. Topic Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-24 md:auto-rows-[180px]">
         {topics.map((t, i) => {
           const label = t.id.charAt(0).toUpperCase() + t.id.slice(1);
           return (
@@ -282,20 +315,11 @@ export default function TopicSelector({ onSelect }) {
               <div className="flex items-center justify-between z-10 w-full relative">
                 <span
                   className="text-[10px] font-bold uppercase tracking-[0.2em]"
-                  style={{ color: "var(--color-accent-kicker)" }}
+                  style={{ color: "rgba(255, 255, 255, 0.6)" }}
                 >
                   {t.kicker}
                 </span>
-                <span
-                  className="edition-badge text-[10px] font-mono font-bold px-1.5 py-0.5 border bg-white/50 backdrop-blur-sm"
-                  style={{
-                    color: "var(--color-accent-brand)",
-                    borderColor: "var(--color-rule-line)",
-                    fontFamily: "var(--font-ui)"
-                  }}
-                >
-                  #{t.num}
-                </span>
+                {/* Badge removed for a cleaner look */}
               </div>
 
               {/* Centered Content (Doodle + Label together) */}
@@ -306,8 +330,8 @@ export default function TopicSelector({ onSelect }) {
                 
                 {/* Label */}
                 <h3
-                  className="text-xl md:text-2xl font-bold w-full text-center"
-                  style={{ fontFamily: "var(--font-display)", color: "var(--color-text-primary)" }}
+                  className="text-xl md:text-2xl font-bold w-full text-center text-white"
+                  style={{ fontFamily: "var(--font-display)" }}
                 >
                   {label}
                 </h3>
@@ -315,10 +339,6 @@ export default function TopicSelector({ onSelect }) {
             </button>
           );
         })}
-      </div>
-
-      <div className="mt-auto pt-8 border-t" style={{ borderColor: "var(--color-rule-line)" }}>
-        <TopicSelectorSearch onSearch={onSelect} />
       </div>
 
       <Footer />

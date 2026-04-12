@@ -57,16 +57,16 @@ export function classifyBias(articles) {
     if (known) {
       return {
         ...article,
-        bias: known.bias,
+        historicalBias: known.bias,
         biasScore: known.score,
         reliability: known.reliability,
       };
     }
 
-    // Heuristic fallback
+    // Heuristic fallback — unknown sources default to center
     return {
       ...article,
-      bias: "center",
+      historicalBias: "center",
       biasScore: 0,
       reliability: 60,
     };

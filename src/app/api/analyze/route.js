@@ -14,8 +14,7 @@ import {
   buildTimeline,
   highlightDiffs,
 } from "@/lib/agents/05_derived_metrics";
-import { detectFraming } from "@/lib/agents/12_framing_detector";
-import { analyzeValence } from "@/lib/agents/13_valence_analyzer";
+import { classifyArticles } from "@/lib/agents/14_combined_classifier";
 import { buildPayload } from "@/lib/agents/10_payload_builder";
 import { CACHE_KEYS, CACHE_TTL, cacheGet, cacheSet } from "@/lib/redis";
 
@@ -32,22 +31,26 @@ async function runPipeline(articles, query, fetchSource) {
   const biased = classifyBias(normalized);
   const enriched = resolveOwnership(biased);
   
-  const [summary, realityScore, perspectives, timeline, framedArticles, valenceArticles] = await Promise.all([
+  // Wave 1: AI analysis (async) — summary + classification run in parallel
+  const [summary, classifiedArticles] = await Promise.all([
     summarizeArticles(enriched, query),
-    Promise.resolve(computeRealityScore(enriched)),
-    Promise.resolve(buildPerspectives(enriched)),
-    Promise.resolve(buildTimeline(enriched)),
-    detectFraming(enriched),
-    analyzeValence(enriched),
+    classifyArticles(enriched), // Groq call for framing + valence + content bias
   ]);
 
-  // Merge results
-  const analysisMap = new Map(valenceArticles.map(a => [a.id, a.valence]));
-  const fullyEnriched = framedArticles.map(a => ({
-    ...a,
-    valence: analysisMap.get(a.id)
-  }));
+  // Wave 2: Merge bias — content-detected bias overrides historical source bias
+  const fullyEnriched = classifiedArticles.map(article => {
+    const contentBias = article.detectedBias?.label;
+    const historicalBias = article.historicalBias;
+    return {
+      ...article,
+      bias: contentBias || historicalBias || "center",
+    };
+  });
 
+  // Wave 3: Derived metrics (sync) — now computed on content-based bias
+  const realityScore = computeRealityScore(fullyEnriched);
+  const perspectives = buildPerspectives(fullyEnriched);
+  const timeline = buildTimeline(fullyEnriched);
   const diffs = highlightDiffs(fullyEnriched, perspectives);
 
   return buildPayload({

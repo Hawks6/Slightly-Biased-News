@@ -23,3 +23,10 @@ None.
 
 ## Persistent Issues
 None.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260411-qbe | Fix main news feed page missing the heading of the news | 2026-04-11 | d64382d | [260411-qbe-fix-main-news-feed-page-missing-the-head](./quick/260411-qbe-fix-main-news-feed-page-missing-the-head/) |
+| 260411-qbf | Rewire Expert Search to use event clustering flow | 2026-04-11 | 963a6a1 | — |

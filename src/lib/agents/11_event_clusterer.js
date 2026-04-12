@@ -1,14 +1,5 @@
-import Groq from "groq-sdk";
+import groq from "@/lib/groq";
 import { z } from "zod";
-
-/**
- * Agent 11: Event Clusterer
- * Groups articles into news events using Groq AI with a keyword-based fallback.
- */
-
-const groq = new Groq({ 
-  apiKey: process.env.GROQ_API_KEY || "dummy_key_avoid_init_error" 
-});
 
 const EventClusterSchema = z.object({
   events: z.array(z.object({

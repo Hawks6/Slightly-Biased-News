@@ -1,4 +1,5 @@
 import { getRedisClient } from "./client";
+import { memCacheGet, memCacheSet, memCacheDelete, memCacheClear } from "./memcache";
 
 export const CACHE_TTL = {
   NEWS: 60 * 15,
@@ -27,37 +28,46 @@ function hashQuery(query) {
 }
 
 export async function cacheGet(key) {
+  // Try Redis first
   const redis = getRedisClient();
-  if (!redis) return null;
-  
-  try {
-    const data = await redis.get(key);
-    if (data) {
-      return JSON.parse(data);
+  if (redis) {
+    try {
+      const data = await redis.get(key);
+      if (data) {
+        return JSON.parse(data);
+      }
+    } catch (err) {
+      console.warn(`[Cache] Redis get failed for ${key}:`, err.message);
     }
-  } catch (err) {
-    console.warn(`[Cache] Get failed for ${key}:`, err.message);
   }
   
-  return null;
+  // Fallback to in-memory cache
+  return memCacheGet(key);
 }
 
 export async function cacheSet(key, value, ttlSeconds) {
+  // Always write to in-memory cache
+  memCacheSet(key, value, ttlSeconds);
+
+  // Also write to Redis if available
   const redis = getRedisClient();
-  if (!redis) return false;
-  
-  try {
-    await redis.setex(key, ttlSeconds, JSON.stringify(value));
-    return true;
-  } catch (err) {
-    console.warn(`[Cache] Set failed for ${key}:`, err.message);
-    return false;
+  if (redis) {
+    try {
+      await redis.setex(key, ttlSeconds, JSON.stringify(value));
+      return true;
+    } catch (err) {
+      console.warn(`[Cache] Redis set failed for ${key}:`, err.message);
+    }
   }
+  
+  return true; // In-memory cache succeeded
 }
 
 export async function cacheDelete(key) {
+  memCacheDelete(key);
+  
   const redis = getRedisClient();
-  if (!redis) return false;
+  if (!redis) return true;
   
   try {
     await redis.del(key);
@@ -69,8 +79,11 @@ export async function cacheDelete(key) {
 }
 
 export async function cacheInvalidatePattern(pattern) {
+  // Clear all in-memory cache on pattern invalidation
+  memCacheClear();
+
   const redis = getRedisClient();
-  if (!redis) return false;
+  if (!redis) return true;
   
   try {
     const keys = await redis.keys(pattern);

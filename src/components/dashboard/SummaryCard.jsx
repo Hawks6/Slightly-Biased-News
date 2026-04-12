@@ -1,6 +1,6 @@
 import { Eye, FileText } from "lucide-react";
 
-export default function SummaryCard({ summary, realityScore }) {
+export default function SummaryCard({ summary, realityScore, query }) {
   if (!summary || !realityScore) return null;
 
   return (
@@ -32,7 +32,7 @@ export default function SummaryCard({ summary, realityScore }) {
             className="text-4xl sm:text-5xl font-bold tracking-tight leading-none" 
             style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-display)" }}
           >
-            The Consensus
+            {query || "The Consensus"}
           </h2>
         </div>
 

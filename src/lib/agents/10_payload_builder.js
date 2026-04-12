@@ -54,6 +54,8 @@ export function buildPayload({
     readTime: a.readTime,
     contentLength: a.contentLength,
     bias: a.bias,
+    historicalBias: a.historicalBias,
+    detectedBias: a.detectedBias,
     biasScore: a.biasScore,
     reliability: a.reliability,
     ownership: a.ownership,

@@ -82,11 +82,8 @@ export default function SlightlyBiasedApp() {
   }, [performAnalysis]);
 
   const handleDirectSearch = useCallback((query) => {
-    performAnalysis({
-      method: "GET",
-      query: query
-    });
-  }, [performAnalysis]);
+    handleTopicSelect(query);
+  }, [handleTopicSelect]);
 
   const goHome = useCallback(() => {
     setActiveView("selector");
@@ -180,7 +177,7 @@ export default function SlightlyBiasedApp() {
                 {data && (
                   <div className="animate-fade-in-up">
                     <MetaStrip meta={data.meta} coverageHealth={data.coverageHealth} />
-                    <SummaryCard summary={data.summary} realityScore={data.realityScore} />
+                    <SummaryCard summary={data.summary} realityScore={data.realityScore} query={data.meta?.query} />
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                       <BiasDistributionChart biasChart={data.biasChart} />
