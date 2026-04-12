@@ -46,16 +46,16 @@ export default function PerspectivesPanel({ perspectives }) {
             className={`flex flex-col ${index !== 2 ? 'md:border-r md:pr-8' : ''}`}
             style={{ borderColor: "var(--color-rule-line)" }}
           >
-            <div className="flex items-baseline justify-between mb-3 border-b-2 pb-1" style={{ borderColor: color }}>
+            <div className="flex items-end justify-between mb-4 border-b-2 pb-2 h-16" style={{ borderColor: color }}>
               <h3 
-                className="text-lg font-bold" 
+                className="text-lg font-bold leading-tight max-w-[70%]" 
                 style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-display)" }}
               >
                 {data.label}
               </h3>
               {data.count !== undefined && (
                 <span 
-                  className="text-[10px] font-bold uppercase tracking-widest"
+                  className="text-[10px] font-bold text-right uppercase tracking-widest mb-0.5 flex-shrink-0"
                   style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-ui)" }}
                 >
                   {data.count} source{data.count !== 1 ? "s" : ""}
