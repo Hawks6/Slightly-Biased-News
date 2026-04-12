@@ -80,7 +80,7 @@ export default function TimelinePanel({ timeline }) {
                 />
                 
                 {/* Metadata column */}
-                <div className="sm:w-28 flex-shrink-0 pt-0.5 sm:text-right flex flex-row sm:flex-col items-center sm:items-end gap-2 sm:gap-0">
+                <div className="sm:w-32 flex-shrink-0 pt-0.5 sm:text-left flex flex-row sm:flex-col items-center sm:items-start gap-2 sm:gap-1">
                   <span 
                     className="text-xs font-bold" 
                     style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-ui)" }}
@@ -90,12 +90,13 @@ export default function TimelinePanel({ timeline }) {
                   
                   {/* Outlet Badge */}
                   <span 
-                    className="mt-1 px-1.5 py-0.5 text-[9px] uppercase font-bold tracking-wider inline-block border"
+                    className="mt-1 px-1.5 py-0.5 text-[9px] uppercase font-bold tracking-wider inline-block border break-words"
                     style={{ 
                       borderColor: accentColor,
                       color: "var(--color-text-primary)",
                       borderLeftWidth: "3px",
-                      fontFamily: "var(--font-ui)"
+                      fontFamily: "var(--font-ui)",
+                      maxWidth: "100%"
                     }}
                   >
                     {event.source}
