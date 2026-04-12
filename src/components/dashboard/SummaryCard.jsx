@@ -61,14 +61,14 @@ export default function SummaryCard({ summary, realityScore, coverageHealth, que
              <ChevronUp size={16} style={{ color: "var(--color-text-muted)" }} className="cursor-pointer" />
           </div>
 
-          <div className="mb-6">
+          <div className="mb-6 border-b pb-6" style={{ borderColor: "var(--color-rule-line)" }}>
             <div 
               className="text-[10px] uppercase font-bold tracking-widest mb-1 text-gray-500"
               style={{ fontFamily: "var(--font-ui)" }}
             >
               Reality Score
             </div>
-            <div className="flex items-end gap-1">
+            <div className="flex items-end gap-1 mb-6">
               <span 
                 className="text-6xl font-bold leading-none tracking-tighter" 
                 style={{ fontFamily: "var(--font-display)", color: "var(--color-text-primary)" }}
@@ -88,6 +88,28 @@ export default function SummaryCard({ summary, realityScore, coverageHealth, que
                 </span>
               </div>
             </div>
+
+            {/* Narrative Analysis (Logic & Takeaways) */}
+            {summary.logic && summary.logic.length > 0 && (
+              <div className="mt-4">
+                <div 
+                  className="text-[10px] uppercase font-bold tracking-widest mb-3 text-gray-500"
+                  style={{ fontFamily: "var(--font-ui)" }}
+                >
+                  Narrative Analysis
+                </div>
+                <ul className="space-y-2">
+                  {summary.logic.map((point, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-[#8b0000] mt-1 text-[10px]">■</span>
+                      <span className="text-sm leading-snug" style={{ color: "var(--color-text-secondary)", fontFamily: "var(--font-body)" }}>
+                        {point}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-4">
