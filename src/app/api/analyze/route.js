@@ -31,16 +31,26 @@ async function runPipeline(articles, query, fetchSource) {
   const biased = classifyBias(normalized);
   const enriched = resolveOwnership(biased);
   
-  const [summary, realityScore, perspectives, timeline, classifiedArticles] = await Promise.all([
+  // Wave 1: AI analysis (async) — summary + classification run in parallel
+  const [summary, classifiedArticles] = await Promise.all([
     summarizeArticles(enriched, query),
-    Promise.resolve(computeRealityScore(enriched)),
-    Promise.resolve(buildPerspectives(enriched)),
-    Promise.resolve(buildTimeline(enriched)),
-    classifyArticles(enriched), // Single Groq call for framing + valence
+    classifyArticles(enriched), // Groq call for framing + valence + content bias
   ]);
 
-  const fullyEnriched = classifiedArticles;
+  // Wave 2: Merge bias — content-detected bias overrides historical source bias
+  const fullyEnriched = classifiedArticles.map(article => {
+    const contentBias = article.detectedBias?.label;
+    const historicalBias = article.historicalBias;
+    return {
+      ...article,
+      bias: contentBias || historicalBias || "center",
+    };
+  });
 
+  // Wave 3: Derived metrics (sync) — now computed on content-based bias
+  const realityScore = computeRealityScore(fullyEnriched);
+  const perspectives = buildPerspectives(fullyEnriched);
+  const timeline = buildTimeline(fullyEnriched);
   const diffs = highlightDiffs(fullyEnriched, perspectives);
 
   return buildPayload({

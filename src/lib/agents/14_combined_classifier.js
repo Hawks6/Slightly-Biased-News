@@ -11,8 +11,11 @@ const ALLOWED_TONES = [
   "Neutral", "Measured", "Optimistic",
 ];
 
+const ALLOWED_BIAS = ["left", "center-left", "center", "center-right", "right"];
+
 const NEUTRAL_FRAMING = { label: "Neutral", confidence: 1.0, reasoning: "Classification unavailable." };
 const NEUTRAL_VALENCE = { valence: 0, intensity: 2, chargedLanguage: [], toneLabel: "Neutral" };
+const NEUTRAL_BIAS = { label: "center", reason: "Classification unavailable — defaulting to neutral." };
 
 function normalizeValence(raw) {
   const valence = typeof raw.valence === "number"
@@ -34,7 +37,7 @@ function normalizeValence(raw) {
 }
 
 /**
- * Combined framing + valence analysis in a single Groq call.
+ * Combined framing + valence + content bias analysis in a single Groq call.
  * @param {Array} articles - Normalized articles
  * @returns {Promise<Array>} - Articles enriched with `.framing` AND `.valence` metadata
  */
@@ -47,6 +50,7 @@ export async function classifyArticles(articles) {
       ...a,
       framing: { ...NEUTRAL_FRAMING, reasoning: "Skipped — no API key." },
       valence: { ...NEUTRAL_VALENCE },
+      detectedBias: { ...NEUTRAL_BIAS },
     }));
   }
 
@@ -57,7 +61,7 @@ export async function classifyArticles(articles) {
       text: truncateWords(cleanText(a.content || a.description || ""), 300),
     }));
 
-    const systemPrompt = `You are a linguistic expert. For each article, provide TWO analyses:
+    const systemPrompt = `You are a media bias and linguistics expert. For each article, provide THREE analyses:
 
 **A) Framing Lens** — classify into exactly ONE of:
 Conflict, Economic, Human Interest, Moral, Responsibility, Policy, Leadership.
@@ -66,22 +70,33 @@ Conflict, Economic, Human Interest, Moral, Responsibility, Policy, Leadership.
 - valence (-1.0 to 1.0): negative ↔ positive sentiment
 - intensity (0-10): emotional intensity level
 - toneLabel: exactly ONE of: Abrasive, Sensationalist, Opinionated, Neutral, Measured, Optimistic
-- chargedLanguage: array of loaded words/phrases
+- chargedLanguage: array of loaded words/phrases found in the text
+
+**C) Content Bias** — determine the political lean based ONLY on the article's language, logic, and framing. Do NOT consider the source's reputation. Analyze:
+- Lexical choices (e.g., "tax relief" vs "tax cuts", "undocumented" vs "illegal")
+- Presupposition and assumed truths
+- Which side's arguments get more space or more favorable framing
+- Emotional loading toward one political direction
+- label: exactly ONE of: left, center-left, center, center-right, right
+- reason: one sentence explaining your reasoning
+- If uncertain, default to "center".
 
 Return ONLY a JSON object:
 {
   "results": {
     "<article_id>": {
       "framing": { "label": "<one of 7>", "confidence": 0.85, "reasoning": "..." },
-      "valence": { "valence": 0.3, "intensity": 5, "toneLabel": "Measured", "chargedLanguage": ["word1"] }
+      "valence": { "valence": 0.3, "intensity": 5, "toneLabel": "Measured", "chargedLanguage": ["word1"] },
+      "bias": { "label": "<one of 5>", "reason": "..." }
     }
   }
 }
 
 Rules:
 - Include ALL article IDs.
-- "label" must be exactly one of the 7 framing lenses.
-- "toneLabel" must be exactly one of the 6 tone labels.`;
+- "label" for framing must be exactly one of the 7 framing lenses.
+- "toneLabel" must be exactly one of the 6 tone labels.
+- "label" for bias must be exactly one of: left, center-left, center, center-right, right.`;
 
     const userPrompt = `Articles:\n${JSON.stringify(snippets, null, 2)}`;
 
@@ -90,9 +105,9 @@ Rules:
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      model: "llama-3.1-8b-instant",
+      model: "llama-3.3-70b-versatile",
       response_format: { type: "json_object" },
-      max_tokens: 3000,
+      max_tokens: 4000,
     });
 
     const raw = chatCompletion.choices?.[0]?.message?.content;
@@ -114,6 +129,7 @@ Rules:
       if (result) {
         const framingData = result.framing || {};
         const valenceData = result.valence || result;
+        const biasData = result.bias || {};
 
         return {
           ...article,
@@ -121,6 +137,10 @@ Rules:
             ? { label: framingData.label, confidence: framingData.confidence || 0.7, reasoning: framingData.reasoning || "" }
             : { ...NEUTRAL_FRAMING },
           valence: normalizeValence(valenceData),
+          detectedBias: {
+            label: ALLOWED_BIAS.includes(biasData.label) ? biasData.label : "center",
+            reason: biasData.reason || "Bias classification unavailable.",
+          },
         };
       }
 
@@ -128,6 +148,7 @@ Rules:
         ...article,
         framing: { ...NEUTRAL_FRAMING },
         valence: { ...NEUTRAL_VALENCE },
+        detectedBias: { ...NEUTRAL_BIAS },
       };
     });
 
@@ -137,6 +158,7 @@ Rules:
       ...a,
       framing: { ...NEUTRAL_FRAMING },
       valence: { ...NEUTRAL_VALENCE },
+      detectedBias: { ...NEUTRAL_BIAS },
     }));
   }
 }
