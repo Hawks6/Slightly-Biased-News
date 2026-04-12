@@ -175,7 +175,6 @@ export default function SlightlyBiasedApp() {
 
                 {data && (
                   <div className="flex flex-col gap-6 animate-fade-in-up">
-                    <TimelinePanel timeline={data.timeline} />
                     <SummaryCard 
                       summary={data.summary} 
                       realityScore={data.realityScore} 
@@ -199,7 +198,8 @@ export default function SlightlyBiasedApp() {
                         {[
                           { id: "perspectives", label: "Perspective Analysis" },
                           { id: "framing", label: "Framing & Language" },
-                          { id: "sources", label: "Source Intel" }
+                          { id: "sources", label: "Source Intel" },
+                          { id: "timeline", label: "Timeline" }
                         ].map(tab => (
                           <button
                             key={tab.id}
@@ -238,6 +238,12 @@ export default function SlightlyBiasedApp() {
                         {activeTab === "sources" && (
                           <div className="animate-fade-in-up">
                             <SourceCards sourceCards={data.sourceCards} />
+                          </div>
+                        )}
+
+                        {activeTab === "timeline" && (
+                          <div className="animate-fade-in-up">
+                            <TimelinePanel timeline={data.timeline} />
                           </div>
                         )}
                       </div>
