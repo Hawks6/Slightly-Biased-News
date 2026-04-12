@@ -14,10 +14,8 @@ import EventFeed from "./events/EventFeed";
 import Footer from "./common/Footer";
 
 // Dashboard Components
-import MetaStrip from "./dashboard/MetaStrip";
-import NarratorColumn from "./dashboard/NarratorColumn";
+import SummaryCard from "./dashboard/SummaryCard";
 import BiasDistributionChart from "./dashboard/BiasDistributionChart";
-import RealityScoreBreakdown from "./dashboard/RealityScoreBreakdown";
 import PerspectivesPanel from "./dashboard/PerspectivesPanel";
 import TimelinePanel from "./dashboard/TimelinePanel";
 import DiffsPanel from "./dashboard/DiffsPanel";
@@ -153,18 +151,15 @@ export default function SlightlyBiasedApp() {
         {/* Navigation Tabs (always visible in feed/analysis) */}
         <TopicTabs onSelect={handleTopicSelect} isLoading={isLoading} />
         
-        <div className={clsx(
-          "grid grid-cols-1 gap-10",
-          activeView === "analysis" ? "lg:grid-cols-2" : "lg:grid-cols-[1fr_340px]"
-        )}>
-          {/* Main Content Column (Or Left split in Analysis) */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-10">
+          {/* Main Content Column */}
           <div className="main-col min-w-0">
             {/* View 2: Event Grid */}
             {activeView === "events" && (
               <EventFeed topic={selectedTopic} onEventSelect={handleEventSelect} />
             )}
 
-            {/* View 3: Analysis Dashboard (Narrator Left Side) */}
+            {/* View 3: Analysis Dashboard */}
             {activeView === "analysis" && (
               <div className="analysis-view min-w-0">
                 <AgentStatusBar isLoading={isLoading} />
@@ -179,15 +174,75 @@ export default function SlightlyBiasedApp() {
                 )}
 
                 {data && (
-                  <>
-                    <MetaStrip meta={data.meta} coverageHealth={data.coverageHealth} />
-                    <NarratorColumn 
-                      data={data} 
+                  <div className="flex flex-col gap-6 animate-fade-in-up">
+                    <TimelinePanel timeline={data.timeline} />
+                    <SummaryCard 
+                      summary={data.summary} 
+                      realityScore={data.realityScore} 
+                      coverageHealth={data.coverageHealth} 
+                      query={data.meta?.query} 
                       onExploreClick={() => {
-                        window.scrollTo({ top: window.innerHeight * 0.8, behavior: 'smooth' });
+                        const el = document.getElementById("deep-dive-hub");
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
                       }} 
                     />
-                  </>
+                    
+                    {/* Deep Dive Hub */}
+                    <div id="deep-dive-hub" className="bg-white border mb-8" style={{ borderColor: 'var(--color-rule-line)' }}>
+                      {/* Tabs Header */}
+                      <div className="flex items-center border-b px-4 mt-2 overflow-x-auto no-scrollbar gap-2" style={{ borderColor: 'var(--color-rule-line)' }}>
+                        <div className="flex items-center gap-2 py-3 pr-4 border-r" style={{ borderColor: 'var(--color-rule-line)' }}>
+                           <span className="text-[12px] font-bold uppercase tracking-widest text-[#8b0000]" style={{ fontFamily: "var(--font-ui)" }}>
+                             Deep Dive
+                           </span>
+                        </div>
+                        {[
+                          { id: "perspectives", label: "Perspective Analysis" },
+                          { id: "framing", label: "Framing & Language" },
+                          { id: "sources", label: "Source Intel" }
+                        ].map(tab => (
+                          <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={clsx(
+                              "px-4 py-2.5 text-xs font-bold transition-colors whitespace-nowrap",
+                              activeTab === tab.id 
+                                ? "text-black border-b-[3px]" 
+                                : "text-gray-500 hover:text-black hover:bg-gray-50 border-b-[3px] border-transparent"
+                            )}
+                            style={{ 
+                              fontFamily: "var(--font-ui)",
+                              borderBottomColor: activeTab === tab.id ? 'var(--color-accent-brand)' : 'transparent'
+                            }}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Tab Content */}
+                      <div className="p-6 md:p-8">
+                        {activeTab === "perspectives" && (
+                          <div className="space-y-10 animate-fade-in-up">
+                            <PerspectivesPanel perspectives={data.perspectives} />
+                            <BiasDistributionChart biasChart={data.biasChart} />
+                          </div>
+                        )}
+
+                        {activeTab === "framing" && (
+                          <div className="animate-fade-in-up">
+                            <DiffsPanel diffs={data.diffs} sourceCards={data.sourceCards} />
+                          </div>
+                        )}
+
+                        {activeTab === "sources" && (
+                          <div className="animate-fade-in-up">
+                            <SourceCards sourceCards={data.sourceCards} />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 )}
 
                 {!data && isLoading && !error && (
@@ -205,86 +260,25 @@ export default function SlightlyBiasedApp() {
             )}
           </div>
 
-          {/* Persistent Sidebar (Or Deep Dive Right Side in Analysis) */}
-          {activeView !== "analysis" ? (
-            <div className="sidebar-col hidden lg:block sticky top-32 space-y-8 self-start">
-              <div className="glass-card p-6" style={{ background: "var(--color-bg-nav)" }}>
-                <h3 className="text-xs font-bold uppercase tracking-widest text-white/50 mb-4 font-mono">Expert Search</h3>
-                <SearchBar onSearch={handleDirectSearch} isLoading={isLoading} />
-              </div>
+          {/* Persistent Sidebar */}
+          <div className="sidebar-col hidden lg:block sticky top-32 space-y-8 self-start">
+            <div className="glass-card p-6" style={{ background: "var(--color-bg-nav)" }}>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-white/50 mb-4 font-mono">Expert Search</h3>
+              <SearchBar onSearch={handleDirectSearch} isLoading={isLoading} />
+            </div>
 
-              <div className="glass-card p-6">
-                <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4" style={{ color: "var(--color-accent-kicker)" }}>
-                  Editorial Standard
-                </h3>
-                <p className="text-sm leading-relaxed mb-4" style={{ fontFamily: "var(--font-body)", color: "var(--color-text-secondary)" }}>
-                  <i className="italic font-bold">Slightly</i> Biased News uses a multi-agent AI pipeline to summarize framing contrasts across the political spectrum. 
-                </p>
-                <div className="text-[10px] uppercase font-bold tracking-widest flex items-center gap-2 opacity-40">
-                   <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Neutral Verified
-                </div>
+            <div className="glass-card p-6">
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4" style={{ color: "var(--color-accent-kicker)" }}>
+                Editorial Standard
+              </h3>
+              <p className="text-sm leading-relaxed mb-4" style={{ fontFamily: "var(--font-body)", color: "var(--color-text-secondary)" }}>
+                <i className="italic font-bold">Slightly</i> Biased News uses a multi-agent AI pipeline to summarize framing contrasts across the political spectrum. 
+              </p>
+              <div className="text-[10px] uppercase font-bold tracking-widest flex items-center gap-2 opacity-40">
+                 <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Neutral Verified
               </div>
             </div>
-          ) : (
-            data && (
-              <div className="deep-dive-col min-w-0 sticky top-[120px] h-[calc(100vh-140px)] overflow-y-auto pr-2 pb-8 custom-scrollbar">
-                
-                {/* Deep Dive Tab Header */}
-                <div className="mb-6 border-b" style={{ borderColor: "var(--color-rule-line)", background: "var(--color-bg-page)", position: "sticky", top: 0, zIndex: 10, paddingBottom: "16px", paddingTop: "8px" }}>
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-4" style={{ fontFamily: "var(--font-ui)" }}>
-                    Deep Dive Analysis
-                  </h3>
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-                    {[
-                      { id: "perspectives", label: "Perspectives" },
-                      { id: "framing", label: "Framing & Language" },
-                      { id: "sources", label: "Source Intel" },
-                      { id: "timeline", label: "Timeline" }
-                    ].map(tab => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={clsx(
-                          "px-4 py-2 text-xs font-bold tracking-wide uppercase transition-colors rounded-sm whitespace-nowrap",
-                          activeTab === tab.id 
-                            ? "bg-black text-white" 
-                            : "bg-white border text-gray-600 hover:bg-gray-50"
-                        )}
-                        style={{ fontFamily: "var(--font-ui)", borderColor: "var(--color-rule-line)" }}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Tab Content */}
-                <div className="animate-fade-in-up">
-                  {activeTab === "perspectives" && (
-                    <div className="space-y-6">
-                      <PerspectivesPanel perspectives={data.perspectives} />
-                      <div className="grid grid-cols-1 gap-6">
-                        <BiasDistributionChart biasChart={data.biasChart} />
-                        <RealityScoreBreakdown realityScore={data.realityScore} />
-                      </div>
-                    </div>
-                  )}
-
-                  {activeTab === "framing" && (
-                    <DiffsPanel diffs={data.diffs} sourceCards={data.sourceCards} />
-                  )}
-
-                  {activeTab === "sources" && (
-                    <SourceCards sourceCards={data.sourceCards} />
-                  )}
-
-                  {activeTab === "timeline" && (
-                    <TimelinePanel timeline={data.timeline} />
-                  )}
-                </div>
-              </div>
-            )
-          )}
+          </div>
         </div>
       </main>
 
