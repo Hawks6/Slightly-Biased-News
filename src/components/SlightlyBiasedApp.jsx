@@ -15,7 +15,7 @@ import Footer from "./common/Footer";
 
 // Dashboard Components
 import MetaStrip from "./dashboard/MetaStrip";
-import SummaryCard from "./dashboard/SummaryCard";
+import NarratorColumn from "./dashboard/NarratorColumn";
 import BiasDistributionChart from "./dashboard/BiasDistributionChart";
 import RealityScoreBreakdown from "./dashboard/RealityScoreBreakdown";
 import PerspectivesPanel from "./dashboard/PerspectivesPanel";
@@ -25,6 +25,7 @@ import SourceCards from "./dashboard/SourceCards";
 
 export default function SlightlyBiasedApp() {
   const [activeView, setActiveView] = useState("selector"); // "selector" | "events" | "analysis"
+  const [activeTab, setActiveTab] = useState("perspectives"); // For deep dive right column
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,6 +36,7 @@ export default function SlightlyBiasedApp() {
    */
   const performAnalysis = useCallback(async (options) => {
     setActiveView("analysis");
+    setActiveTab("perspectives");
     setIsLoading(true);
     setError(null);
     setData(null);
@@ -151,14 +153,18 @@ export default function SlightlyBiasedApp() {
         {/* Navigation Tabs (always visible in feed/analysis) */}
         <TopicTabs onSelect={handleTopicSelect} isLoading={isLoading} />
         
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-10">
+        <div className={clsx(
+          "grid grid-cols-1 gap-10",
+          activeView === "analysis" ? "lg:grid-cols-2" : "lg:grid-cols-[1fr_340px]"
+        )}>
+          {/* Main Content Column (Or Left split in Analysis) */}
           <div className="main-col min-w-0">
             {/* View 2: Event Grid */}
             {activeView === "events" && (
               <EventFeed topic={selectedTopic} onEventSelect={handleEventSelect} />
             )}
 
-            {/* View 3: Analysis Dashboard */}
+            {/* View 3: Analysis Dashboard (Narrator Left Side) */}
             {activeView === "analysis" && (
               <div className="analysis-view min-w-0">
                 <AgentStatusBar isLoading={isLoading} />
@@ -166,34 +172,26 @@ export default function SlightlyBiasedApp() {
                 {error && (
                   <div className="glass-card p-5 mb-8 border-l-4 animate-fade-in-up border-rose-500">
                     <div className="flex items-center gap-2">
-                      <AlertTriangle size={16} className="text-rose-500" />
-                      <span className="text-sm text-rose-500">
-                        {error}
-                      </span>
+                       <AlertTriangle size={16} className="text-rose-500" />
+                       <span className="text-sm text-rose-500">{error}</span>
                     </div>
                   </div>
                 )}
 
                 {data && (
-                  <div className="animate-fade-in-up">
+                  <>
                     <MetaStrip meta={data.meta} coverageHealth={data.coverageHealth} />
-                    <SummaryCard summary={data.summary} realityScore={data.realityScore} query={data.meta?.query} />
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                      <BiasDistributionChart biasChart={data.biasChart} />
-                      <RealityScoreBreakdown realityScore={data.realityScore} />
-                    </div>
-
-                    <PerspectivesPanel perspectives={data.perspectives} />
-                    <TimelinePanel timeline={data.timeline} />
-                    <DiffsPanel diffs={data.diffs} sourceCards={data.sourceCards} />
-
-                    <SourceCards sourceCards={data.sourceCards} />
-                  </div>
+                    <NarratorColumn 
+                      data={data} 
+                      onExploreClick={() => {
+                        window.scrollTo({ top: window.innerHeight * 0.8, behavior: 'smooth' });
+                      }} 
+                    />
+                  </>
                 )}
 
                 {!data && isLoading && !error && (
-                  <div className="text-center py-20 animate-fade-in-up border border-dashed rounded-lg" style={{ borderColor: "var(--color-rule-line)" }}>
+                  <div className="text-center py-20 animate-fade-in-up border border-dashed rounded-lg mt-8" style={{ borderColor: "var(--color-rule-line)" }}>
                     <Loader2 size={32} className="agent-spinner mx-auto mb-4" style={{ color: "var(--color-accent-brand)" }} />
                     <h2 className="text-xl font-semibold mb-2" style={{ fontFamily: "var(--font-display)", color: "var(--color-text-primary)" }}>
                       Performing Synthetic Analysis...
@@ -207,25 +205,86 @@ export default function SlightlyBiasedApp() {
             )}
           </div>
 
-          {/* Persistent Sidebar */}
-          <div className="sidebar-col hidden lg:block sticky top-32 space-y-8 self-start">
-            <div className="glass-card p-6" style={{ background: "var(--color-bg-nav)" }}>
-              <h3 className="text-xs font-bold uppercase tracking-widest text-white/50 mb-4 font-mono">Expert Search</h3>
-              <SearchBar onSearch={handleDirectSearch} isLoading={isLoading} />
-            </div>
+          {/* Persistent Sidebar (Or Deep Dive Right Side in Analysis) */}
+          {activeView !== "analysis" ? (
+            <div className="sidebar-col hidden lg:block sticky top-32 space-y-8 self-start">
+              <div className="glass-card p-6" style={{ background: "var(--color-bg-nav)" }}>
+                <h3 className="text-xs font-bold uppercase tracking-widest text-white/50 mb-4 font-mono">Expert Search</h3>
+                <SearchBar onSearch={handleDirectSearch} isLoading={isLoading} />
+              </div>
 
-            <div className="glass-card p-6">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4" style={{ color: "var(--color-accent-kicker)" }}>
-                Editorial Standard
-              </h3>
-              <p className="text-sm leading-relaxed mb-4" style={{ fontFamily: "var(--font-body)", color: "var(--color-text-secondary)" }}>
-                <i className="italic font-bold">Slightly</i> Biased News uses a multi-agent AI pipeline to summarize framing contrasts across the political spectrum. 
-              </p>
-              <div className="text-[10px] uppercase font-bold tracking-widest flex items-center gap-2 opacity-40">
-                 <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Neutral Verified
+              <div className="glass-card p-6">
+                <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4" style={{ color: "var(--color-accent-kicker)" }}>
+                  Editorial Standard
+                </h3>
+                <p className="text-sm leading-relaxed mb-4" style={{ fontFamily: "var(--font-body)", color: "var(--color-text-secondary)" }}>
+                  <i className="italic font-bold">Slightly</i> Biased News uses a multi-agent AI pipeline to summarize framing contrasts across the political spectrum. 
+                </p>
+                <div className="text-[10px] uppercase font-bold tracking-widest flex items-center gap-2 opacity-40">
+                   <div className="w-2 h-2 rounded-full bg-emerald-500"></div> Neutral Verified
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            data && (
+              <div className="deep-dive-col min-w-0 sticky top-[120px] h-[calc(100vh-140px)] overflow-y-auto pr-2 pb-8 custom-scrollbar">
+                
+                {/* Deep Dive Tab Header */}
+                <div className="mb-6 border-b" style={{ borderColor: "var(--color-rule-line)", background: "var(--color-bg-page)", position: "sticky", top: 0, zIndex: 10, paddingBottom: "16px", paddingTop: "8px" }}>
+                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-4" style={{ fontFamily: "var(--font-ui)" }}>
+                    Deep Dive Analysis
+                  </h3>
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+                    {[
+                      { id: "perspectives", label: "Perspectives" },
+                      { id: "framing", label: "Framing & Language" },
+                      { id: "sources", label: "Source Intel" },
+                      { id: "timeline", label: "Timeline" }
+                    ].map(tab => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={clsx(
+                          "px-4 py-2 text-xs font-bold tracking-wide uppercase transition-colors rounded-sm whitespace-nowrap",
+                          activeTab === tab.id 
+                            ? "bg-black text-white" 
+                            : "bg-white border text-gray-600 hover:bg-gray-50"
+                        )}
+                        style={{ fontFamily: "var(--font-ui)", borderColor: "var(--color-rule-line)" }}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tab Content */}
+                <div className="animate-fade-in-up">
+                  {activeTab === "perspectives" && (
+                    <div className="space-y-6">
+                      <PerspectivesPanel perspectives={data.perspectives} />
+                      <div className="grid grid-cols-1 gap-6">
+                        <BiasDistributionChart biasChart={data.biasChart} />
+                        <RealityScoreBreakdown realityScore={data.realityScore} />
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === "framing" && (
+                    <DiffsPanel diffs={data.diffs} sourceCards={data.sourceCards} />
+                  )}
+
+                  {activeTab === "sources" && (
+                    <SourceCards sourceCards={data.sourceCards} />
+                  )}
+
+                  {activeTab === "timeline" && (
+                    <TimelinePanel timeline={data.timeline} />
+                  )}
+                </div>
+              </div>
+            )
+          )}
         </div>
       </main>
 
