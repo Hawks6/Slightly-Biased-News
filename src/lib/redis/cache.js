@@ -10,7 +10,7 @@ export const CACHE_TTL = {
 
 export const CACHE_KEYS = {
   news: (topic) => `news:${topic.toLowerCase()}`,
-  analyze: (query) => `analyze:${hashQuery(query)}`,
+  analyze: (query) => `analyze_v2:${hashQuery(query)}`,
   events: (topic) => `events:${topic.toLowerCase()}`,
   summary: (query) => `summary:${hashQuery(query)}`,
   biasData: () => "bias:data",
