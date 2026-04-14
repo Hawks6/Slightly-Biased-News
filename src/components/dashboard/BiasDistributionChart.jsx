@@ -66,7 +66,7 @@ export default function BiasDistributionChart({ biasChart }) {
         </h2>
       </div>
 
-      <div className="flex-1 w-full min-h-[220px]">
+      <div className="w-full h-[250px] mt-4">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={biasChart} margin={{ top: 10, right: 10, left: -25, bottom: 5 }}>
             <CartesianGrid 

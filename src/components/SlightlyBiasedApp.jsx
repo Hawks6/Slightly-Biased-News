@@ -14,10 +14,8 @@ import EventFeed from "./events/EventFeed";
 import Footer from "./common/Footer";
 
 // Dashboard Components
-import MetaStrip from "./dashboard/MetaStrip";
 import SummaryCard from "./dashboard/SummaryCard";
 import BiasDistributionChart from "./dashboard/BiasDistributionChart";
-import RealityScoreBreakdown from "./dashboard/RealityScoreBreakdown";
 import PerspectivesPanel from "./dashboard/PerspectivesPanel";
 import TimelinePanel from "./dashboard/TimelinePanel";
 import DiffsPanel from "./dashboard/DiffsPanel";
@@ -25,6 +23,7 @@ import SourceCards from "./dashboard/SourceCards";
 
 export default function SlightlyBiasedApp() {
   const [activeView, setActiveView] = useState("selector"); // "selector" | "events" | "analysis"
+  const [activeTab, setActiveTab] = useState("perspectives"); // For deep dive right column
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,6 +34,7 @@ export default function SlightlyBiasedApp() {
    */
   const performAnalysis = useCallback(async (options) => {
     setActiveView("analysis");
+    setActiveTab("perspectives");
     setIsLoading(true);
     setError(null);
     setData(null);
@@ -152,6 +152,7 @@ export default function SlightlyBiasedApp() {
         <TopicTabs onSelect={handleTopicSelect} isLoading={isLoading} />
         
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-10">
+          {/* Main Content Column */}
           <div className="main-col min-w-0">
             {/* View 2: Event Grid */}
             {activeView === "events" && (
@@ -166,34 +167,92 @@ export default function SlightlyBiasedApp() {
                 {error && (
                   <div className="glass-card p-5 mb-8 border-l-4 animate-fade-in-up border-rose-500">
                     <div className="flex items-center gap-2">
-                      <AlertTriangle size={16} className="text-rose-500" />
-                      <span className="text-sm text-rose-500">
-                        {error}
-                      </span>
+                       <AlertTriangle size={16} className="text-rose-500" />
+                       <span className="text-sm text-rose-500">{error}</span>
                     </div>
                   </div>
                 )}
 
                 {data && (
-                  <div className="animate-fade-in-up">
-                    <MetaStrip meta={data.meta} coverageHealth={data.coverageHealth} />
-                    <SummaryCard summary={data.summary} realityScore={data.realityScore} query={data.meta?.query} />
+                  <div className="flex flex-col gap-6 animate-fade-in-up">
+                    <SummaryCard 
+                      summary={data.summary} 
+                      realityScore={data.realityScore} 
+                      coverageHealth={data.coverageHealth} 
+                      query={data.meta?.query} 
+                      onExploreClick={() => {
+                        const el = document.getElementById("deep-dive-hub");
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      }} 
+                    />
+                    
+                    {/* Deep Dive Hub */}
+                    <div id="deep-dive-hub" className="bg-white border mb-8" style={{ borderColor: 'var(--color-rule-line)' }}>
+                      {/* Tabs Header */}
+                      <div className="flex items-center border-b px-4 mt-2 overflow-x-auto no-scrollbar gap-2" style={{ borderColor: 'var(--color-rule-line)' }}>
+                        <div className="flex items-center gap-2 py-3 pr-4 border-r" style={{ borderColor: 'var(--color-rule-line)' }}>
+                           <span className="text-[12px] font-bold uppercase tracking-widest text-[#8b0000]" style={{ fontFamily: "var(--font-ui)" }}>
+                             Deep Dive
+                           </span>
+                        </div>
+                        {[
+                          { id: "perspectives", label: "Perspective Analysis" },
+                          { id: "framing", label: "Framing & Language" },
+                          { id: "sources", label: "Source Intel" },
+                          { id: "timeline", label: "Timeline" }
+                        ].map(tab => (
+                          <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={clsx(
+                              "px-4 py-2.5 text-xs font-bold transition-colors whitespace-nowrap",
+                              activeTab === tab.id 
+                                ? "text-black border-b-[3px]" 
+                                : "text-gray-500 hover:text-black hover:bg-gray-50 border-b-[3px] border-transparent"
+                            )}
+                            style={{ 
+                              fontFamily: "var(--font-ui)",
+                              borderBottomColor: activeTab === tab.id ? 'var(--color-accent-brand)' : 'transparent'
+                            }}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                      <BiasDistributionChart biasChart={data.biasChart} />
-                      <RealityScoreBreakdown realityScore={data.realityScore} />
+                      {/* Tab Content */}
+                      <div className="p-6 md:p-8">
+                        {activeTab === "perspectives" && (
+                          <div className="space-y-10 animate-fade-in-up">
+                            <PerspectivesPanel perspectives={data.perspectives} />
+                            <BiasDistributionChart biasChart={data.biasChart} />
+                          </div>
+                        )}
+
+                        {activeTab === "framing" && (
+                          <div className="animate-fade-in-up">
+                            <DiffsPanel diffs={data.diffs} sourceCards={data.sourceCards} />
+                          </div>
+                        )}
+
+                        {activeTab === "sources" && (
+                          <div className="animate-fade-in-up">
+                            <SourceCards sourceCards={data.sourceCards} />
+                          </div>
+                        )}
+
+                        {activeTab === "timeline" && (
+                          <div className="animate-fade-in-up">
+                            <TimelinePanel timeline={data.timeline} />
+                          </div>
+                        )}
+                      </div>
                     </div>
-
-                    <PerspectivesPanel perspectives={data.perspectives} />
-                    <TimelinePanel timeline={data.timeline} />
-                    <DiffsPanel diffs={data.diffs} sourceCards={data.sourceCards} />
-
-                    <SourceCards sourceCards={data.sourceCards} />
                   </div>
                 )}
 
                 {!data && isLoading && !error && (
-                  <div className="text-center py-20 animate-fade-in-up border border-dashed rounded-lg" style={{ borderColor: "var(--color-rule-line)" }}>
+                  <div className="text-center py-20 animate-fade-in-up border border-dashed rounded-lg mt-8" style={{ borderColor: "var(--color-rule-line)" }}>
                     <Loader2 size={32} className="agent-spinner mx-auto mb-4" style={{ color: "var(--color-accent-brand)" }} />
                     <h2 className="text-xl font-semibold mb-2" style={{ fontFamily: "var(--font-display)", color: "var(--color-text-primary)" }}>
                       Performing Synthetic Analysis...

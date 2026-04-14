@@ -15,7 +15,8 @@ export function cleanText(html) {
     .replace(/&#39;/g, "'")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
-    .replace(/&[a-zA-Z]+;/g, " ");
+    .replace(/&[a-zA-Z]+;/g, " ")
+    .replace(/\[\+\d+\s*chars\]/gi, " "); // Strip NewsAPI truncation markers
   return text.replace(/\s\s+/g, " ").trim();
 }
 
